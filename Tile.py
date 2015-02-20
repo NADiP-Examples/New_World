@@ -1,4 +1,5 @@
 from Render_functions import *
+import pygame
 from  pygame import *
 
 class Tile():

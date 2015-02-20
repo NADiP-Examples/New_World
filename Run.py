@@ -2,19 +2,7 @@ from pygame import *
 from findPathLee import findPath
 from Tile import *
 from Character import *
-
-
-# Globals
-FPS = 60      #  ФПС программы
-RES_X = 900   # Разрешение по длине
-RES_Y = 700   # Разрешение по ширине
-
-        # Main Actions
-init() # PyGame начинает работу
-screen = display.set_mode((RES_X,RES_Y)) # Создаем окно программы
-clock = time.Clock() #Создаем таймер
-menu = ["game"] # Меню, которое в данный момент на экране
-mainloop = True # Двигатель главного цикла
+from Extra_functions import *
 
 def set_scene(scene_value):
     """
@@ -22,46 +10,43 @@ def set_scene(scene_value):
     """
     scene_value[0][0] = scene_value[1]
 
-def get_click_tile(click, render_coof):
-    cor = [click[0]-render_coof[0],click[1]-render_coof[1]]
-    x = 0
-    y = 0
-    while cor[0] >100:
-        cor[0] -= 100
-        x+=1
-    while cor[1] >100:
-        cor[1] -= 100
-        y+=1
-    return (x,y)
-
-character = Character("Test Character",(0,0))
+# Globals
+FPS = 60      #  ФПС программы
+RES_X = 900   # Разрешение по длине
+RES_Y = 700   # Разрешение по ширине
 
 map_f = (
-    (1,1,1,0,1,1),
-    (1,1,1,1,1,1),
-    (1,1,1,1,1,1),
-    (1,1,1,1,1,1),
-    (0,0,1,1,1,1),
-    (0,1,1,1,1,1)
+    (1,1,1,0,0,1,1),
+    (1,1,1,1,0,1,1),
+    (1,1,1,1,1,1,1),
+    (1,1,1,1,1,1,1),
+    (0,0,1,1,1,1,1),
+    (0,1,1,1,1,1,1)
 )
 map_w = (
-    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
-    ((0,0,0,0),(0,0,0,0),(0,0,1,1),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
-    ((0,0,1,0),(1,1,0,1),(0,0,0,1),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
-    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
-    ((0,0,0,0),(0,0,0,0),(1,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
-    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0))
+    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
+    ((0,0,0,0),(0,0,0,0),(0,0,1,1),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
+    ((0,0,1,0),(1,1,1,1),(0,0,0,1),(0,0,0,0),(0,0,0,1),(0,0,0,0),(0,0,0,0)),
+    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,1),(0,0,0,0),(0,0,0,0),(0,0,0,0)),
+    ((0,0,0,0),(0,0,0,0),(1,0,0,1),(0,0,1,1),(0,0,0,1),(0,0,1,0),(0,0,1,0)),
+    ((0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0),(0,0,0,0))
 )
 
-print(findPath(map_f,map_w,(0,0),(3,2)))
-character.path = findPath(map_f,map_w,(0,0),(1,5))
 
+
+
+        # Main Actions
+init()                                      # PyGame начинает работу
+screen = display.set_mode((RES_X,RES_Y))    # Создаем окно программы
+clock = time.Clock()                        #Создаем таймер
+menu = ["game"]                             # Меню, которое в данный момент на экране
+mainloop = True                             # Двигатель главного цикла
+world_img = Surface((RES_X,RES_Y))
+render_coof = [0,0]
+ch = False
+character = Character("Test Character",(0,0))
 B_tile = Floor((0,0),"B_Tile.png")
 B_wall = Wall((0,0),"Wall_1.png")
-
-world_img = Surface((RES_X,RES_Y))
-render_coof = [200,200]
-ch = False
 
 while mainloop:
     screen.fill((0,0,0))
@@ -77,7 +62,7 @@ while mainloop:
                     ch = True
             if e.type == MOUSEBUTTONUP:
                 if e.button == 1:
-                    character.path = findPath(map_f,map_w,character.cor,(get_click_tile(e.pos,render_coof)))
+                    character.set_path(findPath(map_f,map_w,character.cor,(get_click_tile(e.pos,render_coof,map_f))))
                 if e.button == 2:
                     ch = False
             if e.type == MOUSEMOTION:
@@ -122,13 +107,13 @@ while mainloop:
                 x+=1
             y+=1
 
-        character.update()
+        character.update(clock.get_time())
 
         character.render(world_img,render_coof)
         screen.blit(world_img,(0,0))
 
     # print(clock.get_time())
-    display.set_caption("fps: " + str(clock.get_fps()))
+    display.set_caption("FPS: " + str(clock.get_fps()))
     clock.tick(FPS) # Управление ФПС
 
     display.flip() # Обновляем дисплей

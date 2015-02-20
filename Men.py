@@ -6,7 +6,7 @@ class Men():
     # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
-        self.speed = 3                          # Скорость передвижения
+        self.speed = 5                          # Скорость передвижения
         self.body = {                           # Изображения частей тела персонажей по умолчанию
                 "head" : load_image("Head_1.png", alpha_cannel="True"),                 # Голова
                 "body" : load_image("Body_1.png", alpha_cannel="True")                  # Тело
@@ -26,15 +26,19 @@ class Men():
         self.path = ()                          # Путь, по которому идет персонаж
         self.rotate = 0                         # Угол, на который повернут персонаж
         self.move_progress = [0,0]              # Помогает отобразить процесс перехода с одной клетки на другую
+        self.anim_speed = 25                    # Скорость смены кадров в миллисекундах
+        self.worktime = 0                       # Кол-во миллисекунд с последней смены кадра
         self.ren_img = None                     # Картинка, которая отображается на экране
 
-    def update(self):
-        if self.path:
-            if self.path[0] != self.cor:
-                self.move(self.path[0])
-            else:
-                self.path = self.path[1:]
-                # self.path.                            fixme Тут должна стоять функция, удаляющая элемент по его значению (а именно, первый элемент)
+    def update(self,dt):
+        self.worktime += dt
+        if self.worktime >= self.anim_speed:
+            self.worktime -= self.anim_speed
+            if self.path:
+                if self.path[0] != self.cor:
+                    self.move(self.path[0])
+                else:
+                    self.path = self.path[1:]
         self.ren_img = self.img_designer()
 
     def move(self, new_cor):
@@ -92,6 +96,13 @@ class Men():
             self.rotate -= 360
         elif self.rotate < 0:
             self.rotate += 360
+
+    def set_path(self,path):
+        '''
+                Устанавливает путь
+        '''
+        if not self.path and path != -1:
+            self.path = path
 
     def img_designer(self):
         '''
