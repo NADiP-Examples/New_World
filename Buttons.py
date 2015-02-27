@@ -50,6 +50,7 @@ class Button_Flag():
                 img = pygame.transform.scale(img,size)
         self.rect = self.imgs[0].get_rect()
         self.rect.move_ip(pos)
+        self.cor = pos
         self.s_in = sin
         self.s_tar = st
         self.action = action
@@ -75,9 +76,9 @@ class Button_Flag():
 
     def render(self, screen):
         if self.stat:
-            screen.blit(self.imgs[0], (0,0))
+            screen.blit(self.imgs[0], self.cor)
         else:
-             screen.blit(self.imgs[0], (0,0))
+             screen.blit(self.imgs[0], self.cor)
 
 # class Checkbox():
 #     def __init__(self):

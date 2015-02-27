@@ -31,12 +31,27 @@ class Editable_Field():
         return matrix_f,matrix_w
 
 class Interface():
-    def __init__(self,map):
+    def __init__(self,map, buttons):
         self.brush = 0
+        self.buttons = buttons
         self.grid = self.grid_creator(map)
 
+    def events(self,e):
+        for but in self.buttons:
+            but.events(e)
+
     def set_brush(self, new_brush):
+        """
+                Меняет кисть на новую
+        """
         self.brush = new_brush
+
+    def append_buttons(self,buttons):
+        try:
+            for but in buttons:
+                self.buttons.append(but)
+        except:
+            self.buttons.append(buttons)
 
     def grid_creator(self,map):
         width = 0
@@ -69,6 +84,10 @@ class Interface():
 
     def render(self,screen,render_coof):
         screen.blit(self.grid,render_coof)
+        for but in self.buttons:
+            print(but)
+            but.render(screen)
+
 
 
 
@@ -84,15 +103,22 @@ screen = display.set_mode((RES_X,RES_Y))    # Создаем окно прогр
 mainloop = True                             # Двигатель главного цикла
 
 field = Editable_Field(5,5)
-interface = Interface(field.map_f)
+interface = Interface(field.map_f,[])
 render_coof = [200,200]
 ch = False
 world_img = Surface((RES_X,RES_Y))
 
-B_tile = Floor((0,0),"Tile-2.png")
-B_wall = Wall((0,0),"Wall_1.png")
+objects = {
+    "Floor" : {
+        1  : Floor((0,0),"B_Tile.png",1),
+        2    : Floor((0,0),"Tile-2.png",2)
+    },
+    "Wall" : {
+        1    : Wall((0,),"Wall_1.png",1)
+    }
+}
 
-button = Button_Flag((B_tile.image,B_tile.image),interface.set_brush,(0,0),arg=(1,0))
+interface.append_buttons((Button_Flag((objects["Floor"][1].image,objects["Floor"][1].image),interface.set_brush,(0,0),arg=(1,0)),Button_Flag((objects["Floor"][2].image,objects["Floor"][2].image),interface.set_brush,(100,0),arg=(2,0))))
 
 while mainloop:
     screen.fill((0,0,0))
@@ -101,7 +127,7 @@ while mainloop:
         if e.type == QUIT:
                 mainloop = False
         if e.type == MOUSEBUTTONDOWN or e.type == MOUSEBUTTONUP or e.type == MOUSEMOTION:
-            button.events(e)
+            interface.events(e)
             if e.type == MOUSEBUTTONDOWN:
                 if e.button == 2:
                     ch = True
@@ -119,9 +145,9 @@ while mainloop:
     for line in field.map_f:
         x = 0
         for tile in line:
-            if tile == 1:
-                B_tile.set_coords((x,y))
-                B_tile.render(world_img,render_coof)
+            if tile:
+                objects["Floor"][tile].set_coords((x,y))
+                objects["Floor"][tile].render(world_img,render_coof)
             x+=1
         y+=1
     y = 0
@@ -132,25 +158,24 @@ while mainloop:
             for dir in tile:
                 if dir == 1:
                     if z == 0:
-                        B_wall.set_coords((x,y))
-                        B_wall.set_rotate("D")
-                        B_wall.render(world_img,render_coof)
+                        objects["Wall"][dir].set_coords((x,y))
+                        objects["Wall"][dir].set_rotate("D")
+                        objects["Wall"][dir].render(world_img,render_coof)
                     elif z == 1:
-                        B_wall.set_coords((x,y))
-                        B_wall.set_rotate("L")
-                        B_wall.render(world_img,render_coof)
+                        objects["Wall"][dir].set_coords((x,y))
+                        objects["Wall"][dir].set_rotate("L")
+                        objects["Wall"][dir].render(world_img,render_coof)
                     elif z == 2:
-                        B_wall.set_coords((x,y))
-                        B_wall.set_rotate("U")
-                        B_wall.render(world_img,render_coof)
+                        objects["Wall"][dir].set_coords((x,y))
+                        objects["Wall"][dir].set_rotate("U")
+                        objects["Wall"][dir].render(world_img,render_coof)
                     elif z == 3:
-                        B_wall.set_coords((x,y))
-                        B_wall.set_rotate("R")
-                        B_wall.render(world_img,render_coof)
+                        objects["Wall"][dir].set_coords((x,y))
+                        objects["Wall"][dir].set_rotate("R")
+                        objects["Wall"][dir].render(world_img,render_coof)
                 z +=1
             x+=1
         y+=1
     screen.blit(world_img,(0,0))
     interface.render(screen,render_coof)
-    button.render(screen)
     display.flip()
