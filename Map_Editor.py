@@ -30,15 +30,39 @@ class Editable_Field():
             i+=1
         return matrix_f,matrix_w
 
+    def matrix_new_line(self):
+        line = []
+        i = 0
+        while i < len(self.map_f[0]):
+            line.append(0)
+            i+=1
+        self.map_f.append(line)
+        # i = 0
+        # while i < len(self.map_w[0]):
+        #     line.append((0,0,0,0))
+        #     i+=1
+        # self.map_w.append(line)
+
 class Interface():
-    def __init__(self,map, buttons):
+    def __init__(self,map, buttons, map_size_buttons):
         self.brush = 0
         self.buttons = buttons
+        self.map_size_buttons = map_size_buttons
         self.grid = self.grid_creator(map)
 
-    def events(self,e):
+    def events(self,e,map):
         for but in self.buttons:
-            but.events(e)
+            if but.events(e):
+                self.buttons_up(but)
+        for but in self.map_size_buttons:
+            if but.events(e):
+                self.grid = self.grid_creator(map)
+
+
+    def buttons_up(self,but):
+        for button in self.buttons:
+            if button != but:
+                button.stat = False
 
     def set_brush(self, new_brush):
         """
@@ -85,8 +109,10 @@ class Interface():
     def render(self,screen,render_coof):
         screen.blit(self.grid,render_coof)
         for but in self.buttons:
-            print(but)
             but.render(screen)
+        for but in self.map_size_buttons:
+            but.render(screen)
+
 
 
 
@@ -103,7 +129,7 @@ screen = display.set_mode((RES_X,RES_Y))    # Создаем окно прогр
 mainloop = True                             # Двигатель главного цикла
 
 field = Editable_Field(5,5)
-interface = Interface(field.map_f,[])
+interface = Interface(field.map_f,[],(Button_Img((transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90)),(0,200),field.matrix_new_line),Button_Img((load_image("sel_but_1.png", alpha_cannel="True"),load_image("sel_but_1.png", alpha_cannel="True"),load_image("sel_but_1.png", alpha_cannel="True")),(0,400),field.matrix_new_line)))
 render_coof = [200,200]
 ch = False
 world_img = Surface((RES_X,RES_Y))
@@ -118,7 +144,7 @@ objects = {
     }
 }
 
-interface.append_buttons((Button_Flag((objects["Floor"][1].image,objects["Floor"][1].image),interface.set_brush,(0,0),arg=(1,0)),Button_Flag((objects["Floor"][2].image,objects["Floor"][2].image),interface.set_brush,(100,0),arg=(2,0))))
+interface.append_buttons((Button_Flag(objects["Floor"][1].image,interface.set_brush,(0,0),arg=(1,0)),Button_Flag(objects["Floor"][2].image,interface.set_brush,(100,0),arg=(2,0))))
 
 while mainloop:
     screen.fill((0,0,0))
@@ -127,7 +153,7 @@ while mainloop:
         if e.type == QUIT:
                 mainloop = False
         if e.type == MOUSEBUTTONDOWN or e.type == MOUSEBUTTONUP or e.type == MOUSEMOTION:
-            interface.events(e)
+            interface.events(e,field.map_f)
             if e.type == MOUSEBUTTONDOWN:
                 if e.button == 2:
                     ch = True

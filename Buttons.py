@@ -43,14 +43,14 @@ class Button:
 
 
 class Button_Flag():
-    def __init__(self, images, action, pos, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg'), size = False):
-        self.imgs = images
+    def __init__(self, image, action, pos, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg'), size = False, sub_imgs = ("Tile-Button-in.png","Tile-Button-down.png")):
+        self.img = image
         if size:
-            for img in self.imgs:
-                img = pygame.transform.scale(img,size)
-        self.rect = self.imgs[0].get_rect()
+            self.img = pygame.transform.scale(self.img,size)
+        self.rect = self.img.get_rect()
         self.rect.move_ip(pos)
         self.cor = pos
+        self.sub_imgs = (load_image("Tile-Button-in.png", alpha_cannel="True"),load_image("Tile-Button-down.png", alpha_cannel="True"))
         self.s_in = sin
         self.s_tar = st
         self.action = action
@@ -71,14 +71,53 @@ class Button_Flag():
                     self.action(self.arguments[0])
                 else:
                     self.action(self.arguments[1])
+                return True
         else:
             self.mod = "out"
 
     def render(self, screen):
+        screen.blit(self.img, self.cor)
+        if self.mod == "in":
+            screen.blit(self.sub_imgs[0], self.cor)
         if self.stat:
-            screen.blit(self.imgs[0], self.cor)
-        else:
-             screen.blit(self.imgs[0], self.cor)
+            screen.blit(self.sub_imgs[1], self.cor)
 
-# class Checkbox():
-#     def __init__(self):
+
+
+class Button_Img():
+    def __init__(self, imgs, cor, action, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg')): # Картинки кнопки, координаты, функция, звук при наведении, звук при переходе
+        self.imgs = imgs
+        self.cor = cor
+        self.mod = "out"
+        self.action = action
+        self.arguments = arg
+        self.s_in = sin
+        self.s_tar = st
+        self.rect = self.imgs[0].get_rect()
+        self.rect.move_ip(cor)
+
+    def events(self, e): # Действие, список в который кнопка кидает изменения, доп. цель с возвращением значения.
+        if self.rect.collidepoint(e.pos):
+            if self.s_in:
+                    self.s_in.play()
+            self.mod = "in"
+            if e.type == MOUSEBUTTONDOWN:
+                self.mod = "down"
+            if e.type == MOUSEBUTTONUP:
+                if self.s_tar:
+                    self.s_tar.play()
+                if self.arguments:
+                    self.action(self.arguments)
+                else:
+                    self.action()
+                return True
+        else:
+            self.mod = "out"
+
+    def render(self, screen):
+        if self.mod == "out":
+            screen.blit(self.imgs[0], self.cor)
+        elif self.mod == "in":
+             screen.blit(self.imgs[1], self.cor)
+        elif self.mod == "down":
+             screen.blit(self.imgs[2], self.cor)
