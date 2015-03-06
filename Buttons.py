@@ -57,6 +57,10 @@ class Button_Flag():
         self.arguments = arg        # Кортеж из двух значений, первое - аргументы, передаваемые при нажатии кнопки, вторые - при отжатии
         self.mod = "out"
         self.stat = False           # Показывает, нажата кнопка или нет
+        try:
+            self.render_img = Surface((size))
+        except:
+            self.render_img = Surface((100,100))
 
     def events(self, e): # Действие, список в который кнопка кидает изменения, доп. цель с возвращением значения.
         if self.rect.collidepoint(e.pos):
@@ -76,11 +80,12 @@ class Button_Flag():
             self.mod = "out"
 
     def render(self, screen):
-        screen.blit(self.img, self.cor)
+        self.render_img.blit(self.img, (0,0))
         if self.mod == "in":
-            screen.blit(self.sub_imgs[0], self.cor)
+            self.render_img.blit(self.sub_imgs[0], (0,0))
         if self.stat:
-            screen.blit(self.sub_imgs[1], self.cor)
+            self.render_img.blit(self.sub_imgs[1], (0,0))
+        screen.blit(self.render_img, self.cor)
 
 
 

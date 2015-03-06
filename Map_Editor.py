@@ -82,27 +82,38 @@ class Editable_Field():
                 i += 1
 
 class Interface():
-    def __init__(self,map, buttons, map_size_buttons):
+    def __init__(self,map, buttons, buttons_wall, map_size_buttons):
         self.brush = 0                              # Переменная, в которой содержится ID тайла, которым мы будем рисовать!
-        self.buttons = buttons                      # Кнопки, которыми меняются кисть
+        self.buttons = buttons                      # Кнопки, которыми меняются кисть тайлов
+        self.buttons_wall = buttons_wall            # Кнопки, которыми меняются кисть стен
         self.map_size_buttons = map_size_buttons    # Кнопки, которыми меняется размер поля
+        self.switch_buttons = []
+        self.section = "Floor"
         self.grid = self.grid_creator(map)          # Сетка, которая накладывается на поле с тайлами
 
     def events(self,e,map):
-        print(len(map))
-        for but in self.buttons:
+        for but in self.switch_buttons:
             if but.events(e):
-                self.buttons_up(but)
+                self.buttons_up(but,self.switch_buttons)
+                self.set_brush(0)
+        if self.section == "Floor":
+            for but in self.buttons:
+                if but.events(e):
+                    self.buttons_up(but,self.buttons)
+        if self.section == "Wall":
+            for but in self.buttons_wall:
+                if but.events(e):
+                    self.buttons_up(but,self.buttons_wall)
         for but in self.map_size_buttons:
             if but.events(e):
                 self.grid = self.grid_creator(map)
 
 
-    def buttons_up(self,but):
+    def buttons_up(self,but, lst):
         '''
-                Получает кнопку, на которую нажали и "отжимает" остальные кнопки
+                Получает кнопку, на которую нажали и список с кнопками "отжимает" остальные кнопки
         '''
-        for button in self.buttons:
+        for button in lst:
             if button != but:
                 button.stat = False
 
@@ -111,6 +122,12 @@ class Interface():
                 Меняет кисть на новую
         """
         self.brush = new_brush
+
+    def set_section(self, new_section):
+        """
+                Меняет секцию с объектами на новую
+        """
+        self.section = new_section
 
     def append_buttons(self,buttons):
         '''
@@ -155,8 +172,14 @@ class Interface():
 
     def render(self,screen,render_coof):
         screen.blit(self.grid,render_coof)
-        for but in self.buttons:
-            but.render(screen)
+        for but in self.switch_buttons:
+                but.render(screen)
+        if self.section == "Floor":
+            for but in self.buttons:
+                but.render(screen)
+        if self.section == "Wall":
+            for but in self.buttons_wall:
+                but.render(screen)
         for but in self.map_size_buttons:
             but.render(screen)
 
@@ -175,7 +198,7 @@ screen = display.set_mode((RES_X,RES_Y))    # Создаем окно прогр
 mainloop = True                             # Двигатель главного цикла
 
 field = Editable_Field(5,5)
-interface = Interface(field.map_f,[],
+interface = Interface(field.map_f,[],[],
         (Button_Img((transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),90)),(0,200),field.matrix_new_line),
          Button_Img((transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),270),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),270),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),270)),(0,178),field.matrix_del_last_line),
         Button_Img((transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),180),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),180),transform.rotate(load_image("sel_but_1.png", alpha_cannel="True"),180)),(22,150),field.matrix_new_column),
@@ -195,7 +218,10 @@ objects = {
     }
 }
 
-interface.append_buttons((Button_Flag(objects["Floor"][1].image,interface.set_brush,(0,0),arg=(1,0)),Button_Flag(objects["Floor"][2].image,interface.set_brush,(100,0),arg=(2,0))))
+interface.append_buttons((Button_Flag(objects["Floor"][1].image,interface.set_brush,(0,50),arg=(1,0)),Button_Flag(objects["Floor"][2].image,interface.set_brush,(100,50),arg=(2,0))))
+interface.switch_buttons.append(Button_Flag(objects["Floor"][1].image,interface.set_section,(0,0),arg=("Floor","Floor"),size=(25,25)))
+interface.switch_buttons.append(Button_Flag(objects["Wall"][1].image,interface.set_section,(25,0),arg=("Wall","Wall"),size=(25,25)))
+interface.buttons_wall.append(Button_Flag(objects["Wall"][1].image,interface.set_brush,(0,50),arg=(1,0)))
 
 while mainloop:
     screen.fill((0,0,0))
@@ -210,8 +236,14 @@ while mainloop:
                     ch = True
             if e.type == MOUSEBUTTONUP:
                 if e.button == 1:
-                    if get_click_tile(e.pos, render_coof, field.map_f) != -1:
-                        field.map_f[get_click_tile(e.pos, render_coof, field.map_f)[1]][get_click_tile(e.pos, render_coof, field.map_f)[0]] = interface.brush
+                    if interface.section == "Floor":
+                        if get_click_tile(e.pos, render_coof, field.map_f) != -1:
+                            field.map_f[get_click_tile(e.pos, render_coof, field.map_f)[1]][get_click_tile(e.pos, render_coof, field.map_f)[0]] = interface.brush
+                    elif interface.section == "Wall":
+                        if get_click_tile(e.pos, render_coof, field.map_f) != -1:
+                            cor = get_pixel_in_tile(e.pos, render_coof, field.map_f)
+                            if cor[1] >=90:
+                                field.map_w[get_click_tile(e.pos, render_coof, field.map_f)[1]][get_click_tile(e.pos, render_coof, field.map_f)[0]][0] = interface.brush
                 if e.button == 2:
                     ch = False
             if e.type == MOUSEMOTION:
