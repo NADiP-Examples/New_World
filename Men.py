@@ -1,4 +1,4 @@
-from pygame import *
+import pygame
 from Render_functions import *
 
 class Men():
@@ -113,11 +113,11 @@ class Men():
         else:
             body = self.body["body"]
         head = self.body["head"]
-        img = Surface((body.get_width(),int(head.get_height()/2+body.get_height())), SRCALPHA)
+        img = pygame.Surface((body.get_width(),int(head.get_height()/2+body.get_height())), pygame.SRCALPHA)
         img.blit(body, (0,img.get_height()-body.get_height()))
         img.blit(head, (img.get_width()/2-head.get_width()/2,0))
-        img = transform.rotate(img,self.rotate)
-        main_img = Surface((100,100),SRCALPHA)
+        img = pygame.transform.rotate(img,self.rotate)
+        main_img = pygame.Surface((100,100),pygame.SRCALPHA)
         main_img.blit(img, (main_img.get_width()/2-img.get_width()/2,main_img.get_height()/2-img.get_height()/2))
         return main_img
 

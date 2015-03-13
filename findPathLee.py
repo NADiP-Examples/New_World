@@ -16,7 +16,7 @@ def findPath(Matrix, WallMatrix, Start, Finish):
     counter = 0
     if Matrix[Start[1]][Start[0]] and Matrix[Finish[1]][Finish[0]]:
         while currentPosition != Finish:
-            if len(Matrix[0])* len(Matrix)<= counter:
+            if len(Matrix[0])*len(Matrix) <= counter:
                 return -1
             for currentPosition in resPath[i]:
                 if currentPosition == Finish:
@@ -27,19 +27,20 @@ def findPath(Matrix, WallMatrix, Start, Finish):
                         if newPoint in j:
                             check = False
                     if not newPoint in res and check:
-                        res+=[newPoint]
+                        res += [newPoint]
                     check = True
 
             if Finish in res:
                 res = [Finish]
-            i+=1
+            i += 1
             resPath[i] = res
             res = []
-            counter+=1
+            counter += 1
         resPath = output(resPath, i, Matrix, WallMatrix, Start)
         return resPath
     else:
         return -1
+
 
 def output(resPath, endOfDictionary, Matrix, WallMatrix, Start):
     try:
@@ -53,7 +54,7 @@ def output(resPath, endOfDictionary, Matrix, WallMatrix, Start):
             for j in pointsAround:
                 if j in resPath[i] and not j in res:
                     res.append(j)
-                    endOfDictionary-=1
+                    endOfDictionary -= 1
                     break
     res.reverse()
     return res

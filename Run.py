@@ -1,8 +1,9 @@
-from pygame import *
+import pygame
 from findPathLee import findPath
-from Tile import *
-from Character import *
-from Extra_functions import *
+import Tile
+from Character import Character
+import Extra_functions
+
 
 def set_scene(scene_value):
     """
@@ -11,7 +12,7 @@ def set_scene(scene_value):
     scene_value[0][0] = scene_value[1]
 
 # Globals
-FPS = 60      #  ФПС программы
+FPS = 60      # ФПС программы
 RES_X = 900   # Разрешение по длине
 RES_Y = 700   # Разрешение по ширине
 
@@ -36,40 +37,40 @@ map_w = (
 
 
         # Main Actions
-init()                                      # PyGame начинает работу
-screen = display.set_mode((RES_X,RES_Y))    # Создаем окно программы
-clock = time.Clock()                        #Создаем таймер
-menu = ["game"]                             # Меню, которое в данный момент на экране
-mainloop = True                             # Двигатель главного цикла
-world_img = Surface((RES_X,RES_Y))
-render_coof = [0,0]
+pygame.init()                                       # PyGame начинает работу
+screen = pygame.display.set_mode((RES_X,RES_Y))     # Создаем окно программы
+clock = pygame.time.Clock()                         #Создаем таймер
+menu = ["game"]                                     # Меню, которое в данный момент на экране
+mainloop = True                                     # Двигатель главного цикла
+world_img = pygame.Surface((RES_X, RES_Y))
+render_coof = [0, 0]
 ch = False
-character = Character("Test Character",(0,0))
-B_tile = Floor((0,0),"B_Tile.png")
-B_wall = Wall((0,0),"Wall_1.png")
+character = Character("Test Character", (0, 0))
+B_tile = Tile.Floor((0, 0), "B_Tile.png", 1)
+B_wall = Tile.Wall((0, 0), "Wall_1.png", 1)
 
 while mainloop:
-    screen.fill((0,0,0))
-    world_img.fill((0,0,0))
+    screen.fill((0, 0, 0))
+    world_img.fill((0, 0, 0))
     if menu[0] == "game":
-        for e in event.get():
-            if e.type == QUIT:
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
                     mainloop = False
-            if e.type == MOUSEBUTTONDOWN:
+            if e.type == pygame.MOUSEBUTTONDOWN:
                 if e.button == 1:
                     pass
                 if e.button == 2:
                     ch = True
-            if e.type == MOUSEBUTTONUP:
+            if e.type == pygame.MOUSEBUTTONUP:
                 if e.button == 1:
-                    character.set_path(findPath(map_f,map_w,character.cor,(get_click_tile(e.pos,render_coof,map_f))))
+                    character.set_path(findPath(map_f,map_w,character.cor,(Extra_functions.get_click_tile(e.pos,render_coof,map_f))))
                 if e.button == 2:
                     ch = False
-            if e.type == MOUSEMOTION:
+            if e.type == pygame.MOUSEMOTION:
                 if ch:
                     render_coof[0] += e.rel[0]
                     render_coof[1] += e.rel[1]
-            elif e.type == KEYDOWN or e.type == KEYUP:
+            elif e.type == pygame.KEYDOWN or e.type == pygame.KEYUP:
                 pass
         y = 0
         for line in map_f:
@@ -113,7 +114,7 @@ while mainloop:
         screen.blit(world_img,(0,0))
 
     # print(clock.get_time())
-    display.set_caption("FPS: " + str(clock.get_fps()))
+    pygame.display.set_caption("FPS: " + str(clock.get_fps()))
     clock.tick(FPS) # Управление ФПС
 
-    display.flip() # Обновляем дисплей
+    pygame.display.flip() # Обновляем дисплей

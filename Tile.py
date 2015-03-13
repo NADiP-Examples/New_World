@@ -1,6 +1,6 @@
-from Render_functions import *
+import Render_functions
 import pygame
-from  pygame import *
+
 
 class Tile():
     def __init__(self, coords, state, ID):
@@ -15,7 +15,7 @@ class Tile():
 class Floor(Tile):
     def __init__(self,coords, img, ID, state="passable"):
         Tile.__init__(self,coords, state,ID)
-        self.image = load_image(img,alpha_cannel=True)
+        self.image = Render_functions.load_image(img,alpha_cannel=True)
 
     def render(self,screen, coof):
         screen.blit(self.image, (self.cor[0]*100+coof[0],self.cor[1]*100+coof[1]))
@@ -23,7 +23,7 @@ class Floor(Tile):
 class Wall(Tile):
     def __init__(self,coords,img, ID, state="impassable",rotate = "D"):
         Tile.__init__(self,coords, state, ID)
-        self.image = load_image(img,alpha_cannel=True)
+        self.image = Render_functions.load_image(img,alpha_cannel=True)
         self.render_image = self.image
         self.rotate = rotate
         self.set_rotate(self.rotate)
@@ -31,11 +31,11 @@ class Wall(Tile):
     def set_rotate(self,rotate):
         self.rotate = rotate
         if rotate == "R":
-            self.render_image = transform.rotate(self.image,90)
+            self.render_image = pygame.transform.rotate(self.image,90)
         elif rotate == "L":
-            self.render_image = transform.rotate(self.image,-90)
+            self.render_image = pygame.transform.rotate(self.image,-90)
         elif rotate == "U":
-            self.render_image = transform.rotate(self.image,180)
+            self.render_image = pygame.transform.rotate(self.image,180)
         elif rotate == "D":
             self.render_image = self.image
 

@@ -1,5 +1,5 @@
-from Men import *
-from pygame import *
+from Men import Men
+import pygame
 
 class Character(Men):
     def __init__(self, name,cor):
