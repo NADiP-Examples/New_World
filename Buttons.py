@@ -1,7 +1,7 @@
 import pygame
 from pygame import *
 
-from Old_F.Render_functions import *
+from Render_functions import *
 
 
 pygame.init() # Из-за какого-то космического недоразумения, которое и породило pygame, без этой строки класс не может при инициализации прочесть звук.

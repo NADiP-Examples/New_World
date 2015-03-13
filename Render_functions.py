@@ -2,7 +2,7 @@ import os
 
 import pygame
 
-from Old_F.Game_text import *
+# from Old_F.Game_text import *
 
 
 def load_image(name,path = "Images", alpha_cannel = ""):
