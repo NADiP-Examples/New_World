@@ -2,6 +2,7 @@ import pygame
 import Extra_functions
 import Tile
 import Buttons
+import Render_functions
 
 
 class EditableField():
@@ -9,9 +10,9 @@ class EditableField():
         self.map_f, self.map_w = self.matrix_creator(width, height)  # Карты тайлов и стен
 
     def matrix_creator(self, width, height):
-        '''
+        """
                 Получает ширину и высоту (в тайлах) и возвращает пустой шаблон карты (тайлов и стен - именно в этом порядке)
-        '''
+        """
         matrix_f = []
         matrix_w = []
         line = []
@@ -35,9 +36,9 @@ class EditableField():
         return matrix_f,matrix_w
 
     def matrix_new_line(self):
-        '''
+        """
                 Добавляет новую линию снизу
-        '''
+        """
         line = []
         i = 0
         while i < len(self.map_f[0]):
@@ -52,9 +53,9 @@ class EditableField():
         self.map_w.append(line)
 
     def matrix_del_last_line(self):
-        '''
+        """
                 Удаляет нижнюю линию
-        '''
+        """
         if len(self.map_f) > 1:
             self.map_f = self.map_f[0:-1]
             self.map_w = self.map_w[0:-1]
@@ -84,10 +85,28 @@ class EditableField():
 
 
 class Interface():
-    def __init__(self, map, buttons, buttons_wall, map_size_buttons):
+    def __init__(self, map, map_size_buttons, objects):
         self.brush = 0                              # ID тайла, которым мы будем рисовать!
-        self.buttons = buttons                      # Кнопки, которыми меняются кисть тайлов
-        self.buttons_wall = buttons_wall            # Кнопки, которыми меняются кисть стен
+        self.buttons_floor = []                     # Кнопки, которыми меняются кисть тайлов
+        x = 0
+        y = 50
+        for num in objects["Floor"]:
+            tile = objects["Floor"][num]
+            self.buttons_floor.append(Buttons.Button_Flag(tile.image, self.set_brush, (x, y), arg=(tile.ID, 0)))
+            x += 100
+            if x > 100:
+                x = 0
+                y += 100
+        self.buttons_wall = []            # Кнопки, которыми меняются кисть стен
+        x = 0
+        y = 50
+        for num in objects["Wall"]:
+            tile = objects["Wall"][num]
+            self.buttons_wall.append(Buttons.Button_Flag(tile.image, self.set_brush, (x, y), arg=(tile.ID, 0)))
+            x += 100
+            if x > 100:
+                x = 0
+                y += 100
         self.map_size_buttons = map_size_buttons    # Кнопки, которыми меняется размер поля
         self.switch_buttons = []                    # Кнопки, переключающие меню
         self.section = "Floor"                      # Меню, которое находится в данный момент на экране
@@ -99,9 +118,9 @@ class Interface():
                 self.buttons_up(but, self.switch_buttons)
                 self.set_brush(0)
         if self.section == "Floor":
-            for but in self.buttons:
+            for but in self.buttons_floor:
                 if but.events(e):
-                    self.buttons_up(but, self.buttons)
+                    self.buttons_up(but, self.buttons_floor)
         if self.section == "Wall":
             for but in self.buttons_wall:
                 if but.events(e):
@@ -131,19 +150,19 @@ class Interface():
         self.section = new_section
 
     def append_buttons(self, buttons):
-        '''
+        """
                 Добавляет кнопку/кнопки разных тайов в общий список
-        '''
+        """
         try:
             for but in buttons:
-                self.buttons.append(but)
+                self.buttons_floor.append(but)
         except:
-            self.buttons.append(buttons)
+            self.buttons_floor.append(buttons)
 
     def grid_creator(self, map):
-        '''
+        """
                 Получает карту, возвращает секу, которая визуально будет отделять один тайл от другого
-        '''
+        """
         width = 0
         height = 0
         i = 0
@@ -174,7 +193,7 @@ class Interface():
         for but in self.switch_buttons:
                 but.render(screen)
         if self.section == "Floor":
-            for but in self.buttons:
+            for but in self.buttons_floor:
                 but.render(screen)
         if self.section == "Wall":
             for but in self.buttons_wall:
@@ -193,11 +212,6 @@ pygame.init()                                       # PyGame начинает р
 screen = pygame.display.set_mode((RES_X, RES_Y))    # Создаем окно программы
 mainloop = True                                     # Двигатель главного цикла
 field = EditableField(5, 5)                         # Создаем шаблон поля тайлов
-interface = Interface(field.map_f,[],[],            # Создаем интерфейс (сетка, кнопки)
-    (Buttons.Button_Img(("sel_but_3.png", "sel_but_3.png", "sel_but_3.png"), (0, 200), field.matrix_new_line),
-     Buttons.Button_Img(("sel_but_2.png", "sel_but_2.png", "sel_but_2.png"), (0, 178), field.matrix_del_last_line),
-     Buttons.Button_Img(("sel_but_1.png", "sel_but_1.png", "sel_but_1.png"), (22, 150), field.matrix_new_column),
-     Buttons.Button_Img(("sel_but_4.png", "sel_but_4.png", "sel_but_4.png"), (0, 150), field.matrix_del_last_column)))
 render_coof = [200, 200]
 ch = False
 world_img = pygame.Surface((RES_X,RES_Y))
@@ -213,10 +227,15 @@ objects = {
     }
 }
 
-interface.append_buttons((Buttons.Button_Flag(objects["Floor"][1].image, interface.set_brush, (0, 50),arg=(1, 0)),Buttons.Button_Flag(objects["Floor"][2].image,interface.set_brush,(100,50),arg=(2,0))))
+interface = Interface(field.map_f,            # Создаем интерфейс (сетка, кнопки)
+    (Buttons.Button_Img(("sel_but_3.png", "sel_but_3.png", "sel_but_3.png"), (RES_X-20, 70), field.matrix_new_line),
+     Buttons.Button_Img(("sel_but_2.png", "sel_but_2.png", "sel_but_2.png"), (RES_X-20, 40), field.matrix_del_last_line),
+     Buttons.Button_Img(("sel_but_1.png", "sel_but_1.png", "sel_but_1.png"), (RES_X-20, 10), field.matrix_new_column),
+     Buttons.Button_Img(("sel_but_4.png", "sel_but_4.png", "sel_but_4.png"), (RES_X-50, 10), field.matrix_del_last_column)), objects)
+
 interface.switch_buttons.append(Buttons.Button_Flag(objects["Floor"][1].image,interface.set_section,(0,0),arg=("Floor","Floor"),size=(25,25)))
 interface.switch_buttons.append(Buttons.Button_Flag(objects["Wall"][1].image,interface.set_section,(25,0),arg=("Wall","Wall"),size=(25,25)))
-interface.buttons_wall.append(Buttons.Button_Flag(objects["Wall"][1].image,interface.set_brush,(0,50),arg=(1,0)))
+
 
 while mainloop:
     screen.fill((0, 0, 0))
@@ -237,8 +256,14 @@ while mainloop:
                     elif interface.section == "Wall":
                         if Extra_functions.get_click_tile(e.pos, render_coof, field.map_f) != -1:
                             cor = Extra_functions.get_pixel_in_tile(e.pos, render_coof, field.map_f)
-                            if cor[1] >=90:
+                            if cor[1] >= 90:
                                 field.map_w[Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[1]][Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[0]][0] = interface.brush
+                            elif cor[0] <= 10:
+                                field.map_w[Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[1]][Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[0]][1] = interface.brush
+                            elif cor[1] <= 10:
+                                field.map_w[Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[1]][Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[0]][2] = interface.brush
+                            elif cor[0] >= 90:
+                                field.map_w[Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[1]][Extra_functions.get_click_tile(e.pos, render_coof, field.map_f)[0]][3] = interface.brush
                 if e.button == 2:
                     ch = False
             if e.type == pygame.MOUSEMOTION:
@@ -246,41 +271,7 @@ while mainloop:
                     render_coof[0] += e.rel[0]
                     render_coof[1] += e.rel[1]
     # Начало скрипта определения и отрисовки тайлов!
-    y = 0
-    for line in field.map_f:
-        x = 0
-        for tile in line:
-            if tile:
-                objects["Floor"][tile].set_coords((x, y))
-                objects["Floor"][tile].render(world_img, render_coof)
-            x += 1
-        y += 1
-    y = 0
-    for line in field.map_w:
-        x = 0
-        for tile in line:
-            z = 0
-            for dir in tile:
-                if dir == 1:
-                    if z == 0:
-                        objects["Wall"][dir].set_coords((x, y))
-                        objects["Wall"][dir].set_rotate("D")
-                        objects["Wall"][dir].render(world_img, render_coof)
-                    elif z == 1:
-                        objects["Wall"][dir].set_coords((x, y))
-                        objects["Wall"][dir].set_rotate("L")
-                        objects["Wall"][dir].render(world_img, render_coof)
-                    elif z == 2:
-                        objects["Wall"][dir].set_coords((x, y))
-                        objects["Wall"][dir].set_rotate("U")
-                        objects["Wall"][dir].render(world_img, render_coof)
-                    elif z == 3:
-                        objects["Wall"][dir].set_coords((x, y))
-                        objects["Wall"][dir].set_rotate("R")
-                        objects["Wall"][dir].render(world_img, render_coof)
-                z += 1
-            x += 1
-        y += 1
+    world_img = Render_functions.scene_render(field.map_f,field.map_w,objects,world_img,render_coof)
     # Конец скрипта определения и отрисовки тайлов!
     screen.blit(world_img, (0, 0))              # Клеим поле
     interface.render(screen, render_coof)       # Клеим интерфейс

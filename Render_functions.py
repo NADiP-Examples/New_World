@@ -37,46 +37,43 @@ def tiled_background(img, res_x, res_y):
             x = 0
             y += size
 
-# def scene_render(map_f,map_w):
-#     y = 0
-#         for line in map_f:
-#             x = 0
-#             for tile in line:
-#                 if tile == 1:
-#                     B_tile.set_coords((x,y))
-#                     B_tile.render(world_img,render_coof)
-#                 x+=1
-#             y+=1
-#         y = 0
-#         for line in map_w:
-#             x = 0
-#             for tile in line:
-#                 z = 0
-#                 for dir in tile:
-#                     if dir == 1:
-#                         if z == 0:
-#                             print("D")
-#                             B_wall.set_coords((x,y))
-#                             B_wall.set_rotate("D")
-#                             B_wall.render(world_img,render_coof)
-#                         elif z == 1:
-#                             print("L")
-#                             B_wall.set_coords((x,y))
-#                             B_wall.set_rotate("L")
-#                             B_wall.render(world_img,render_coof)
-#                         elif z == 2:
-#                             print("U")
-#                             B_wall.set_coords((x,y))
-#                             B_wall.set_rotate("U")
-#                             B_wall.render(world_img,render_coof)
-#                         elif z == 3:
-#                             print("R")
-#                             B_wall.set_coords((x,y))
-#                             B_wall.set_rotate("R")
-#                             B_wall.render(world_img,render_coof)
-#                     z +=1
-#                 x+=1
-#             y+=1
+def scene_render(map_f,map_w, objects, sur, render_coof):
+    y = 0
+    for line in map_f:
+        x = 0
+        for tile in line:
+            if tile:
+                objects["Floor"][tile].set_coords((x, y))
+                objects["Floor"][tile].render(sur, render_coof)
+            x += 1
+        y += 1
+    y = 0
+    for line in map_w:
+        x = 0
+        for tile in line:
+            z = 0
+            for dir in tile:
+                if dir == 1:
+                    if z == 0:
+                        objects["Wall"][dir].set_coords((x, y))
+                        objects["Wall"][dir].set_rotate("D")
+                        objects["Wall"][dir].render(sur, render_coof)
+                    elif z == 1:
+                        objects["Wall"][dir].set_coords((x, y))
+                        objects["Wall"][dir].set_rotate("L")
+                        objects["Wall"][dir].render(sur, render_coof)
+                    elif z == 2:
+                        objects["Wall"][dir].set_coords((x, y))
+                        objects["Wall"][dir].set_rotate("U")
+                        objects["Wall"][dir].render(sur, render_coof)
+                    elif z == 3:
+                        objects["Wall"][dir].set_coords((x, y))
+                        objects["Wall"][dir].set_rotate("R")
+                        objects["Wall"][dir].render(sur, render_coof)
+                z += 1
+            x += 1
+        y += 1
+    return sur
 
 def massdata_render(screen, mod,char):
     y = 15
