@@ -4,11 +4,11 @@ import pygame
 # from Old_F.Game_text import *
 
 
-def load_image(name,path = "Images", alpha_cannel = ""):
-    fullname = os.path.join(path, name) # Указываем путь к папке с картинками
+def load_image(name, path="Images", alpha_cannel=""):
+    fullname = os.path.join(path, name)  # Указываем путь к папке с картинками
 
     try:
-        image = pygame.image.load(fullname) # Загружаем картинку и сохраняем поверхность (Surface)
+        image = pygame.image.load(fullname)  # Загружаем картинку и сохраняем поверхность (Surface)
     except (pygame.error): # Если картинки нет на месте
         print("Cannot load image:", name)
         return 0
