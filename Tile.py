@@ -17,8 +17,8 @@ class Floor(Tile):
         Tile.__init__(self,coords, state,ID)
         self.image = Render_functions.load_image(img,alpha_cannel=True)
 
-    def render(self,screen, coof):
-        screen.blit(self.image, (self.cor[0]*100+coof[0],self.cor[1]*100+coof[1]))
+    def render(self,screen):
+        screen.blit(self.image, (self.cor[0]*100,self.cor[1]*100))
 
 class Wall(Tile):
     def __init__(self,coords,img, ID, state="impassable",rotate = "D"):
@@ -39,5 +39,5 @@ class Wall(Tile):
         elif rotate == "D":
             self.render_image = self.image
 
-    def render(self,screen,coof):
-        screen.blit(self.render_image, (self.cor[0]*100+coof[0],self.cor[1]*100+coof[1]))
+    def render(self,screen):
+        screen.blit(self.render_image, (self.cor[0]*100,self.cor[1]*100))

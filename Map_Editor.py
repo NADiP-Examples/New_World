@@ -33,7 +33,7 @@ class EditableField():
         while i < height:
             matrix_w.append(line[:])
             i += 1
-        return matrix_f,matrix_w
+        return matrix_f, matrix_w
 
     def matrix_new_line(self):
         """
@@ -85,7 +85,7 @@ class EditableField():
 
 
 class Interface():
-    def __init__(self, map, map_size_buttons, objects):
+    def __init__(self, map, objects, map_size_buttons):
         self.brush = 0                              # ID тайла, которым мы будем рисовать!
         self.buttons_floor = []                     # Кнопки, которыми меняются кисть тайлов
         x = 0
@@ -206,6 +206,7 @@ class Interface():
 FPS = 60      # ФПС программы
 RES_X = 900   # Разрешение по длине
 RES_Y = 700   # Разрешение по ширине
+TILE_SIZE = 50
 
 # Main Actions
 pygame.init()                                       # PyGame начинает работу
@@ -214,7 +215,7 @@ mainloop = True                                     # Двигатель гла�
 field = EditableField(5, 5)                         # Создаем шаблон поля тайлов
 render_coof = [200, 200]
 ch = False
-world_img = pygame.Surface((RES_X,RES_Y))
+world_img = pygame.Surface((RES_X, RES_Y))
 
 objects = {
         # Все доступные объекты
@@ -227,11 +228,11 @@ objects = {
     }
 }
 
-interface = Interface(field.map_f,            # Создаем интерфейс (сетка, кнопки)
+interface = Interface(field.map_f, objects,            # Создаем интерфейс (сетка, кнопки)
     (Buttons.Button_Img(("sel_but_3.png", "sel_but_3.png", "sel_but_3.png"), (RES_X-20, 70), field.matrix_new_line),
      Buttons.Button_Img(("sel_but_2.png", "sel_but_2.png", "sel_but_2.png"), (RES_X-20, 40), field.matrix_del_last_line),
      Buttons.Button_Img(("sel_but_1.png", "sel_but_1.png", "sel_but_1.png"), (RES_X-20, 10), field.matrix_new_column),
-     Buttons.Button_Img(("sel_but_4.png", "sel_but_4.png", "sel_but_4.png"), (RES_X-50, 10), field.matrix_del_last_column)), objects)
+     Buttons.Button_Img(("sel_but_4.png", "sel_but_4.png", "sel_but_4.png"), (RES_X-50, 10), field.matrix_del_last_column)))
 
 interface.switch_buttons.append(Buttons.Button_Flag(objects["Floor"][1].image,interface.set_section,(0,0),arg=("Floor","Floor"),size=(25,25)))
 interface.switch_buttons.append(Buttons.Button_Flag(objects["Wall"][1].image,interface.set_section,(25,0),arg=("Wall","Wall"),size=(25,25)))
@@ -271,8 +272,9 @@ while mainloop:
                     render_coof[0] += e.rel[0]
                     render_coof[1] += e.rel[1]
     # Начало скрипта определения и отрисовки тайлов!
-    world_img = Render_functions.scene_render(field.map_f,field.map_w,objects,world_img,render_coof)
+    world_img = Render_functions.scene_render(field.map_f, field.map_w, objects, world_img, TILE_SIZE)
     # Конец скрипта определения и отрисовки тайлов!
-    screen.blit(world_img, (0, 0))              # Клеим поле
+    screen.blit(world_img, render_coof)         # Клеим поле
+    print("Координаты world_img = ", world_img.width)
     interface.render(screen, render_coof)       # Клеим интерфейс
     pygame.display.flip()                       # Обновляем экран

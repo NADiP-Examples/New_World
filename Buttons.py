@@ -41,10 +41,10 @@ class Button:
 
 
 class Button_Flag():
-    def __init__(self, image, action, pos, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg'), size = False, sub_imgs = ("Tile-Button-in.png","Tile-Button-down.png")):
+    def __init__(self, image, action, pos, arg=False, sin=False, st=pygame.mixer.Sound('Sounds/2.ogg'), size=False):
         self.img = image
         if size:
-            self.img = pygame.transform.scale(self.img,size)
+            self.img = pygame.transform.scale(self.img, size)
         self.rect = self.img.get_rect()
         self.rect.move_ip(pos)
         self.cor = pos

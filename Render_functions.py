@@ -19,32 +19,32 @@ def load_image(name,path = "Images", alpha_cannel = ""):
 
     return image
 
-def load_text(text, color=(255,255,255), font=None, pt=20):
-    return pygame.font.Font(font, pt).render(text,True,color)
+def load_text(text, color=(255, 255, 255), font=None, pt=20):
+    return pygame.font.Font(font, pt).render(text, True, color)
 
 def tiled_background(img, res_x, res_y):
     x = 0
     y = 0
     img = load_image(img, alpha_cannel="True")
-    surface = pygame.Surface((res_x,res_y))
+    surface = pygame.Surface((res_x, res_y))
     size = img.get_rect()[3]
     while True:
-        surface.blit(img,(x,y))
-        x+=size
+        surface.blit(img, (x, y))
+        x += size
         if x >= res_x:
             if y >= res_y:
                 return surface
             x = 0
             y += size
 
-def scene_render(map_f,map_w, objects, sur, render_coof):
+def scene_render(map_f, map_w, objects, sur, size):
     y = 0
     for line in map_f:
         x = 0
         for tile in line:
             if tile:
                 objects["Floor"][tile].set_coords((x, y))
-                objects["Floor"][tile].render(sur, render_coof)
+                objects["Floor"][tile].render(sur)
             x += 1
         y += 1
     y = 0
@@ -57,25 +57,27 @@ def scene_render(map_f,map_w, objects, sur, render_coof):
                     if z == 0:
                         objects["Wall"][dir].set_coords((x, y))
                         objects["Wall"][dir].set_rotate("D")
-                        objects["Wall"][dir].render(sur, render_coof)
+                        objects["Wall"][dir].render(sur)
                     elif z == 1:
                         objects["Wall"][dir].set_coords((x, y))
                         objects["Wall"][dir].set_rotate("L")
-                        objects["Wall"][dir].render(sur, render_coof)
+                        objects["Wall"][dir].render(sur)
                     elif z == 2:
                         objects["Wall"][dir].set_coords((x, y))
                         objects["Wall"][dir].set_rotate("U")
-                        objects["Wall"][dir].render(sur, render_coof)
+                        objects["Wall"][dir].render(sur)
                     elif z == 3:
                         objects["Wall"][dir].set_coords((x, y))
                         objects["Wall"][dir].set_rotate("R")
-                        objects["Wall"][dir].render(sur, render_coof)
+                        objects["Wall"][dir].render(sur)
                 z += 1
             x += 1
         y += 1
+    size = (50, 50)
+    sur = pygame.transform.scale(sur, size)
     return sur
 
-def massdata_render(screen, mod,char):
+def massdata_render(screen, mod, char):
     y = 15
     screen.blit(load_text("Навыки:", pt=25, color=(255,152,0)), (30,y))
     y += 60
