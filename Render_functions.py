@@ -73,8 +73,7 @@ def scene_render(map_f, map_w, objects, sur, size):
                 z += 1
             x += 1
         y += 1
-    size = (50, 50)
-    sur = pygame.transform.scale(sur, size)
+    sur = pygame.transform.scale(sur, (size*len(map_f[0]), size*len(map_f)))
     return sur
 
 def massdata_render(screen, mod, char):

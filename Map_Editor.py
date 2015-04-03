@@ -7,58 +7,44 @@ import Render_functions
 
 class EditableField():
     def __init__(self, width, height):
-        self.map_f, self.map_w = self.matrix_creator(width, height)  # Карты тайлов и стен
+        self.map_f, self.map_w, self.map_d = self.matrix_creator(width, height)  # Карты тайлов и стен
 
     def matrix_creator(self, width, height):
         """
                 Получает ширину и высоту (в тайлах) и возвращает пустой шаблон карты (тайлов и стен - именно в этом порядке)
         """
-        matrix_f = []
-        matrix_w = []
-        line = []
-        i = 0
-        while i < width:
-            line.append(0)
-            i += 1
-        i = 0
-        while i < height:
-            matrix_f.append(line[:])
-            i += 1
-        i = 0
-        line = []
-        while i < width:
-            line.append([0, 0, 0, 0])
-            i += 1
-        i = 0
-        while i < height:
-            matrix_w.append(line[:])
-            i += 1
-        return matrix_f, matrix_w
+        map_floor = []
+        map_wall = []
+        map_decor = []
+        for h in range(height):
+            line_floor = []
+            line_wall = []
+            line_decor = []
+            for w in range(width):
+                line_floor.append(0)
+                line_wall.append([0, 0, 0, 0])
+                line_decor.append(0)
+            map_floor.append(line_floor)
+            map_wall.append(line_wall)
+            map_decor.append(line_decor)
+        return map_floor, map_wall, map_decor
 
     def matrix_new_line(self):
         """
                 Добавляет новую линию снизу
         """
-        line = []
-        i = 0
-        while i < len(self.map_f[0]):
-            line.append(0)
-            i += 1
-        self.map_f.append(line)
-        i = 0
-        line = []
-        while i < len(self.map_w[0]):
-            line.append([0, 0, 0, 0])
-            i += 1
-        self.map_w.append(line)
+        self.map_f.append([0 for _ in range(len(self.map_f[0]))])
+        self.map_w.append([[0, 0, 0, 0] for _ in range(len(self.map_w[0]))])
+        self.map_f.append([0 for _ in range(len(self.map_d[0]))])
 
     def matrix_del_last_line(self):
         """
                 Удаляет нижнюю линию
         """
         if len(self.map_f) > 1:
-            self.map_f = self.map_f[0:-1]
-            self.map_w = self.map_w[0:-1]
+            self.map_f.pop()
+            self.map_w.pop()
+            self.map_d.pop()
 
     def matrix_new_column(self):
         """
@@ -68,20 +54,20 @@ class EditableField():
             line.append(0)
         for line in self.map_w:
             line.append([0, 0, 0, 0])
+        for line in self.map_d:
+            line.append(0)
 
     def matrix_del_last_column(self):
         """
                 Удаляет колонну справа
         """
         if len(self.map_f[0]) > 1:
-            i = 0
-            while i < len(self.map_f):
-                self.map_f[i] = self.map_f[i][:-1]
-                i += 1
-            i = 0
-            while i < len(self.map_w):
-                self.map_w[i] = self.map_w[i][:-1]
-                i += 1
+            for line in self.map_f:
+                line.pop()
+            for line in self.map_w:
+                line.pop()
+            for line in self.map_d:
+                line.pop()
 
 
 class Interface():
@@ -206,7 +192,7 @@ class Interface():
 FPS = 60      # ФПС программы
 RES_X = 900   # Разрешение по длине
 RES_Y = 700   # Разрешение по ширине
-TILE_SIZE = 50
+TILE_SIZE = 100
 
 # Main Actions
 pygame.init()                                       # PyGame начинает работу
@@ -275,6 +261,6 @@ while mainloop:
     world_img = Render_functions.scene_render(field.map_f, field.map_w, objects, world_img, TILE_SIZE)
     # Конец скрипта определения и отрисовки тайлов!
     screen.blit(world_img, render_coof)         # Клеим поле
-    print("Координаты world_img = ", world_img.width)
+    # print("Координаты world_img = ", world_img.width)
     interface.render(screen, render_coof)       # Клеим интерфейс
     pygame.display.flip()                       # Обновляем экран
