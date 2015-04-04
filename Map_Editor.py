@@ -3,6 +3,8 @@ import Extra_functions
 import Tile
 import Buttons
 import Render_functions
+import LoadSave
+import Parsers
 
 
 class EditableField():
@@ -35,7 +37,7 @@ class EditableField():
         """
         self.map_f.append([0 for _ in range(len(self.map_f[0]))])
         self.map_w.append([[0, 0, 0, 0] for _ in range(len(self.map_w[0]))])
-        self.map_f.append([0 for _ in range(len(self.map_d[0]))])
+        self.map_d.append([0 for _ in range(len(self.map_d[0]))])
 
     def matrix_del_last_line(self):
         """
@@ -69,6 +71,48 @@ class EditableField():
             for line in self.map_d:
                 line.pop()
 
+    def save_map(self):
+        """
+        Сохранение
+        """
+        # tile_matrix = []
+        tile_matrix_str = ''
+        for line in self.map_f:
+            for tile in line:
+                tile_matrix_str += str(tile) + " "
+            tile_matrix_str = tile_matrix_str[:len(tile_matrix_str)]+'\n'
+            # tile_matrix.append(row_tile)
+        load_or_save = LoadSave.LoadSave()
+        load_or_save.saveFile()
+        if load_or_save.savePath:
+            file = open(load_or_save.savePath, 'w')
+            file.write(tile_matrix_str)
+            file.close()
+
+    def load_map(self):
+        """
+        Загрузка из файла
+        """
+        load_or_save = LoadSave.LoadSave()
+        load_or_save.openFile()
+        if load_or_save.openPath:
+            self.map_f, self.map_w = Parsers.load_data(path=load_or_save.openPath)
+            # self.parent.scroll_row.set_num(len(tile_list))
+            # self.parent.scroll_column.set_num(len(tile_list[0]))
+            # for index_row, row in enumerate(tile_list):
+            #     lst = []  #список с тайлами в строке, потом добавится в список со списками тайлов
+            #     for index_coord, coord in enumerate(row):
+            #         if coord==0:  #если элемент равен 0, то создается тайл с дыркой
+            #             tile = Tile(index_coord,index_row,'hole', 'tile_hole.png',self)
+            #             lst.append(tile)
+            #         elif coord==1: #если элемент равен 1, то создается тайл травы
+            #             tile = Tile(index_coord,index_row,'grass', 'tile_grass.jpg',self)
+            #             lst.append(tile)
+            #         elif coord==2: #если элемент равен 1, то создается тайл воды
+            #             tile = Tile(index_coord,index_row,'water', 'tile_water.gif',self)
+            #             lst.append(tile)
+            #     self.tile_list.append(lst)
+
 
 class Interface():
     def __init__(self, map, objects, map_size_buttons):
@@ -95,6 +139,7 @@ class Interface():
                 y += 100
         self.map_size_buttons = map_size_buttons    # Кнопки, которыми меняется размер поля
         self.switch_buttons = []                    # Кнопки, переключающие меню
+        self.saveload_buttons = []                  # Кнопки сохранения и загрузки
         self.section = "Floor"                      # Меню, которое находится в данный момент на экране
         self.grid = self.grid_creator(map)          # Сетка, которая накладывается на поле с тайлами
 
@@ -114,6 +159,10 @@ class Interface():
         for but in self.map_size_buttons:
             if but.events(e):
                 self.grid = self.grid_creator(map)
+        for but in self.saveload_buttons:
+            if but.events(e):
+                self.grid = self.grid_creator(map)
+        self.grid = self.grid_creator(map) # fixme! Каждый чертов раз, когда рисуется новый кадр, мне приходится перерисовывать сетку!!!
 
     def buttons_up(self, but, lst):
         """
@@ -186,6 +235,8 @@ class Interface():
                 but.render(screen)
         for but in self.map_size_buttons:
             but.render(screen)
+        for but in self.saveload_buttons:
+            but.render(screen)
 
 
 # Globals
@@ -220,8 +271,11 @@ interface = Interface(field.map_f, objects,            # Создаем инте
      Buttons.Button_Img(("sel_but_1.png", "sel_but_1.png", "sel_but_1.png"), (RES_X-20, 10), field.matrix_new_column),
      Buttons.Button_Img(("sel_but_4.png", "sel_but_4.png", "sel_but_4.png"), (RES_X-50, 10), field.matrix_del_last_column)))
 
-interface.switch_buttons.append(Buttons.Button_Flag(objects["Floor"][1].image,interface.set_section,(0,0),arg=("Floor","Floor"),size=(25,25)))
-interface.switch_buttons.append(Buttons.Button_Flag(objects["Wall"][1].image,interface.set_section,(25,0),arg=("Wall","Wall"),size=(25,25)))
+interface.switch_buttons.append(Buttons.Button_Flag(objects["Floor"][1].image, interface.set_section, (0, 0), arg=("Floor", "Floor"), size=(25,25)))
+interface.switch_buttons.append(Buttons.Button_Flag(objects["Wall"][1].image, interface.set_section, (25, 0), arg=("Wall", "Wall"), size=(25, 25)))
+
+interface.saveload_buttons.append(Buttons.Button("Сохранить", (RES_X-220, 10), field.save_map))
+interface.saveload_buttons.append(Buttons.Button("Загрузить", (RES_X-320, 10), field.load_map))
 
 
 while mainloop:

@@ -4,7 +4,7 @@ import Render_functions
 
 pygame.init() # Из-за какого-то космического недоразумения, которое и породило pygame, без этой строки класс не может при инициализации прочесть звук.
 class Button:
-    def __init__(self, text, cor, action, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg'), color=(255,152,0), font=None, pt=27): # Текст кнопки, координаты, функция, звук при наведении, звук при переходе
+    def __init__(self, text, cor, action, arg=False, sin=False, st=pygame.mixer.Sound('Sounds/2.ogg'), color=(255, 152, 0), pt=27): # Текст кнопки, координаты, функция, звук при наведении, звук при переходе
         self.out = Render_functions.load_text(text,pt=pt)
         self.into = Render_functions.load_text(text,pt=pt,color=color)
         self.rect = Render_functions.load_text(text,pt=pt).get_rect()
