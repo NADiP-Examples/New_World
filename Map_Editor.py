@@ -4,7 +4,7 @@ import Tile
 import Buttons
 import Render_functions
 import LoadSave
-import Parsers
+import pickle
 
 
 class EditableField():
@@ -76,17 +76,17 @@ class EditableField():
         Сохранение
         """
         # tile_matrix = []
-        tile_matrix_str = ''
-        for line in self.map_f:
-            for tile in line:
-                tile_matrix_str += str(tile) + " "
-            tile_matrix_str = tile_matrix_str[:len(tile_matrix_str)]+'\n'
-            # tile_matrix.append(row_tile)
+        # tile_matrix_str = ''
+        # for line in self.map_f:
+        #     for tile in line:
+        #         tile_matrix_str += str(tile) + " "
+        #     tile_matrix_str = tile_matrix_str[:len(tile_matrix_str)]+'\n'
         load_or_save = LoadSave.LoadSave()
         load_or_save.saveFile()
         if load_or_save.savePath:
-            file = open(load_or_save.savePath, 'w')
-            file.write(tile_matrix_str)
+            maps = (self.map_f, self.map_w, self.map_d)
+            file = open(load_or_save.savePath, 'wb')
+            pickle.dump(maps, file)
             file.close()
 
     def load_map(self):
@@ -96,23 +96,11 @@ class EditableField():
         load_or_save = LoadSave.LoadSave()
         load_or_save.openFile()
         if load_or_save.openPath:
-            self.map_f, self.map_w = Parsers.load_data(path=load_or_save.openPath)
-            # self.parent.scroll_row.set_num(len(tile_list))
-            # self.parent.scroll_column.set_num(len(tile_list[0]))
-            # for index_row, row in enumerate(tile_list):
-            #     lst = []  #список с тайлами в строке, потом добавится в список со списками тайлов
-            #     for index_coord, coord in enumerate(row):
-            #         if coord==0:  #если элемент равен 0, то создается тайл с дыркой
-            #             tile = Tile(index_coord,index_row,'hole', 'tile_hole.png',self)
-            #             lst.append(tile)
-            #         elif coord==1: #если элемент равен 1, то создается тайл травы
-            #             tile = Tile(index_coord,index_row,'grass', 'tile_grass.jpg',self)
-            #             lst.append(tile)
-            #         elif coord==2: #если элемент равен 1, то создается тайл воды
-            #             tile = Tile(index_coord,index_row,'water', 'tile_water.gif',self)
-            #             lst.append(tile)
-            #     self.tile_list.append(lst)
-
+            # self.map_f, self.map_w = Parsers.load_data(path=load_or_save.openPath)
+            file = open(load_or_save.getOpenPath(), 'rb')
+            maps = pickle.load(file)
+            self.map_f, self.map_w, self.map_d = maps
+            file.close()
 
 class Interface():
     def __init__(self, map, objects, map_size_buttons):

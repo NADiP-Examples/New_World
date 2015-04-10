@@ -14,32 +14,33 @@ def findPath(Matrix, WallMatrix, Start, Finish):
     currentPosition = Start
     i = 0
     counter = 0
-    if Matrix[Start[1]][Start[0]] and Matrix[Finish[1]][Finish[0]]:
-        while currentPosition != Finish:
-            if len(Matrix[0])*len(Matrix) <= counter:
-                return -1
-            for currentPosition in resPath[i]:
-                if currentPosition == Finish:
-                    break
-                newPoints = checkAround(currentPosition, Matrix, WallMatrix)
-                for newPoint in newPoints:
-                    for j in list(resPath.values()):
-                        if newPoint in j:
-                            check = False
-                    if not newPoint in res and check:
-                        res += [newPoint]
-                    check = True
+    if Finish != -1:
+        if Matrix[Start[1]][Start[0]] and Matrix[Finish[1]][Finish[0]]:
+            while currentPosition != Finish:
+                if len(Matrix[0])*len(Matrix) <= counter:
+                    return -1
+                for currentPosition in resPath[i]:
+                    if currentPosition == Finish:
+                        break
+                    newPoints = checkAround(currentPosition, Matrix, WallMatrix)
+                    for newPoint in newPoints:
+                        for j in list(resPath.values()):
+                            if newPoint in j:
+                                check = False
+                        if not newPoint in res and check:
+                            res += [newPoint]
+                        check = True
 
-            if Finish in res:
-                res = [Finish]
-            i += 1
-            resPath[i] = res
-            res = []
-            counter += 1
-        resPath = output(resPath, i, Matrix, WallMatrix, Start)
-        return resPath
-    else:
-        return -1
+                if Finish in res:
+                    res = [Finish]
+                i += 1
+                resPath[i] = res
+                res = []
+                counter += 1
+            resPath = output(resPath, i, Matrix, WallMatrix, Start)
+            return resPath
+        else:
+            return -1
 
 
 def output(resPath, endOfDictionary, Matrix, WallMatrix, Start):
