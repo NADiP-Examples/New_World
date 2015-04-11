@@ -40,7 +40,7 @@ def findPath(Matrix, WallMatrix, Start, Finish):
             resPath = output(resPath, i, Matrix, WallMatrix, Start)
             return resPath
         else:
-            return -1
+            return False
 
 
 def output(resPath, endOfDictionary, Matrix, WallMatrix, Start):

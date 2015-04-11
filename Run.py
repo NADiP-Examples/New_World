@@ -9,19 +9,46 @@ import Buttons
 
 
 class Interface():
-    def __init__(self, char):
+    def __init__(self, char, res):
         self.buttons = []
         self.character = char
+        self.z_ind = False
+        self.resolution = res
+        self.path = None
 
     def events(self, e):
         if self.buttons:
             for but in self.buttons:
-                but.events(e)
+                if but.events(e):
+                    self.z_ind = True
+                else:
+                    self.z_ind = False
+        if e.type == pygame.MOUSEBUTTONUP:
+            if e.button == 1 and not self.z_ind:
+                character.set_path(findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f))))
+        if character.stepwise_mod:
+            if e.type == pygame.MOUSEMOTION:
+                self.path = findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f)))
+                if self.path == -1:
+                    self.path = None
 
-    def render(self, screen):
+    def render(self, screen, coof):
         if self.buttons:
             for but in self.buttons:
                     but.render(screen)
+        x = self.resolution[0] - 330
+        y = self.resolution[1] - 25
+        for i in range(15):
+            if i < character.action_points:
+                screen.blit(Render_functions.load_image('ActP_active.png', alpha_cannel="True"), (x, y))
+            else:
+                screen.blit(Render_functions.load_image('ActP_wasted.png', alpha_cannel="True"), (x, y))
+            x += 22
+        if character.stepwise_mod:
+            if self.path:
+                for tile in self.path:
+                    screen.blit(Render_functions.load_image('Tile-Button-down.png', alpha_cannel="True"), (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
+
 
 
 def set_scene(scene_value):
@@ -52,7 +79,7 @@ world_img = pygame.Surface((RES_X, RES_Y))
 render_coof = [0, 0]
 ch = False
 character = Character("Test Character", (0, 0))
-interface = Interface(character)
+interface = Interface(character, (RES_X, RES_Y))
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), character.change_mod))
 
 
@@ -82,8 +109,6 @@ while mainloop:
                 if e.button == 2:
                     ch = True
             if e.type == pygame.MOUSEBUTTONUP:
-                if e.button == 1:
-                    character.set_path(findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f))))
                 if e.button == 2:
                     ch = False
             if e.type == pygame.MOUSEMOTION:
@@ -97,7 +122,7 @@ while mainloop:
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
         character.render(world_img)
         screen.blit(world_img, render_coof)
-        interface.render(screen)
+        interface.render(screen, render_coof)
 
     pygame.display.set_caption("FPS: " + str(clock.get_fps()))
     clock.tick(FPS)         # Управление ФПС

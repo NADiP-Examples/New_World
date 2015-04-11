@@ -20,10 +20,12 @@ class Men():
                 "strength"  :1,                                                        # Сила
                 "shooting"  :1                                                         # Стрельба
                     }
+        self.coofs = {
+            'stepwise_move': 2
+        }
         self.healf = 100                        # Очки здоровья
         self.manna = self.skills["magic"]*10    # Очки манны
         self.action_points = 15                 # Очки действий
-        self.stepwise_mod = False
 
     # Технические заморочки
         self.path = ()                          # Путь, по которому идет персонаж
@@ -32,16 +34,32 @@ class Men():
         self.anim_speed = 25                    # Скорость смены кадров в миллисекундах
         self.worktime = 0                       # Кол-во миллисекунд с последней смены кадра
         self.ren_img = None                     # Картинка, которая отображается на экране
+        self.stepwise_mod = False
+        self.last_stop = None
 
     def update(self, dt):
         self.worktime += dt
+        if not self.stepwise_mod:
+            if self.action_points < 15:
+                self.action_points += 1
         if self.worktime >= self.anim_speed:
             self.worktime -= self.anim_speed
             if self.path:
-                if self.path[0] != self.cor:
-                    self.move(self.path[0])
+                if self.stepwise_mod:
+                    if self.path[0] != self.cor:
+                        if self.action_points - self.coofs['stepwise_move'] < 0:
+                            self.stop()
+                        else:
+                            self.move(self.path[0])
+                    else:
+                        self.path = self.path[1:]
+                        self.action_points -= self.coofs['stepwise_move']
                 else:
-                    self.path = self.path[1:]
+                    if self.path[0] != self.cor:
+                        self.move(self.path[0])
+                    else:
+                        self.path = self.path[1:]
+
         self.ren_img = self.img_designer()
 
     def move(self, new_cor):
@@ -81,6 +99,11 @@ class Men():
                     self.move_progress[1] = 0
                     self.cor = new_cor
 
+    def stop(self):
+        if self.path != self.last_stop:
+            self.path = self.path[0]
+            self.last_stop = self.path
+
     def img_rotate(self, value, angle=10):
         """
                 Поворачивает картинку в сторону значения угла value на angle градусов. 0 градусов - вверх
@@ -105,6 +128,8 @@ class Men():
         """
         if not self.path and path != -1:
             self.path = path
+            # if self.stepwise_mod:
+            #     self.action_points -= len(self.path)*self.coofs['stepwise_move']
 
     def img_designer(self):
         """

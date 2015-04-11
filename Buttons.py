@@ -22,13 +22,16 @@ class Button:
             if self.s_in:
                     self.s_in.play()
             self.mod = "in"
-            if e.type == pygame.MOUSEBUTTONDOWN:
+            if e.type == pygame.MOUSEBUTTONUP:
                 if self.s_tar:
                     self.s_tar.play()
                 if self.arguments:
                     self.action(self.arguments)
+                    return True
                 else:
                     self.action()
+                    return True
+
         else:
             self.mod = "out"
 
