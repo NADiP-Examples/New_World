@@ -2,6 +2,7 @@ import pygame
 from findPathLee import findPath
 import Tile
 from Character import Character
+from NPC import NPC
 import Extra_functions
 import Render_functions
 import pickle
@@ -11,6 +12,7 @@ import Buttons
 class Interface():
     def __init__(self, char, res):
         self.buttons = []
+        self.stepwise_buttons = []
         self.character = char
         self.z_ind = False
         self.resolution = res
@@ -63,6 +65,11 @@ RES_X = 900   # Разрешение по длине
 RES_Y = 700   # Разрешение по ширине
 TILE_SIZE = 100
 
+def npc_step(npc_list):
+    for npc in npc_list:
+        pass
+
+
 
         # Main Actions
 file = open('d', 'rb')
@@ -81,6 +88,7 @@ ch = False
 character = Character("Test Character", (0, 0))
 interface = Interface(character, (RES_X, RES_Y))
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), character.change_mod))
+interface.stepwise_buttons.append(Buttons.Button("Конец хода", (0, RES_Y-20), character.change_mod))
 
 
 objects = {
@@ -93,6 +101,8 @@ objects = {
         1: Tile.Wall((0, 0), "Wall_1.png", 1)
     }
 }
+
+npc_list = [NPC("Test_Enemy",(1,4))]
 
 while mainloop:
     screen.fill((0, 0, 0))
@@ -119,8 +129,12 @@ while mainloop:
                 pass
 
         character.update(clock.get_time())
+        for npc in npc_list:
+            npc.update(clock.get_time())
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
         character.render(world_img)
+        for npc in npc_list:
+            npc.render(world_img)
         screen.blit(world_img, render_coof)
         interface.render(screen, render_coof)
 

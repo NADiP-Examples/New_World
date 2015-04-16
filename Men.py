@@ -50,13 +50,19 @@ class Men():
                         if self.action_points - self.coofs['stepwise_move'] < 0:
                             self.stop()
                         else:
-                            self.move(self.path[0])
+                            if type(self.path[0]) == int:
+                                self.move(self.path)
+                            else:
+                                self.move(self.path[0])
                     else:
                         self.path = self.path[1:]
                         self.action_points -= self.coofs['stepwise_move']
                 else:
                     if self.path[0] != self.cor:
-                        self.move(self.path[0])
+                        if type(self.path[0]) == int:
+                            self.move(self.path)
+                        else:
+                            self.move(self.path[0])
                     else:
                         self.path = self.path[1:]
 
@@ -101,8 +107,9 @@ class Men():
 
     def stop(self):
         if self.path != self.last_stop:
-            self.path = self.path[0]
-            self.last_stop = self.path
+            # self.path = self.path[0]
+            self.last_stop = self.path[0]
+            self.path = None
 
     def img_rotate(self, value, angle=10):
         """
@@ -126,10 +133,14 @@ class Men():
         """
                 Устанавливает путь
         """
-        if not self.path and path != -1:
-            self.path = path
-            # if self.stepwise_mod:
-            #     self.action_points -= len(self.path)*self.coofs['stepwise_move']
+        if path != -1:
+            if not self.path:
+                self.path = path
+            elif type(self.path[0]) == int:  # fixme! Жуткий ход. Поправить.
+                print(self.path)
+                self.path = path
+                print(self.path)
+
 
     def img_designer(self):
         """
