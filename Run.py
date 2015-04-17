@@ -10,10 +10,11 @@ import Buttons
 
 
 class Interface():
-    def __init__(self, char, res):
+    def __init__(self, char, npc, res):
         self.buttons = []
         self.stepwise_buttons = []
         self.character = char
+        self.npc_list = npc
         self.z_ind = False
         self.resolution = res
         self.path = None
@@ -29,10 +30,26 @@ class Interface():
             if e.button == 1 and not self.z_ind:
                 character.set_path(findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f))))
         if character.stepwise_mod:
+            for but in self.stepwise_buttons:
+                if but.events(e):
+                    self.z_ind = True
+                else:
+                    self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
                 self.path = findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f)))
                 if self.path == -1:
                     self.path = None
+
+    def new_step(self):
+        character.action_points = 15
+        if self.npc_list:
+            for npc in self.npc_list:
+                npc.action_points = 15
+
+    def change_mod(self):
+        character.change_mod()
+        for npc in self.npc_list:
+            npc.change_mod()
 
     def render(self, screen, coof):
         if self.buttons:
@@ -47,6 +64,9 @@ class Interface():
                 screen.blit(Render_functions.load_image('ActP_wasted.png', alpha_cannel="True"), (x, y))
             x += 22
         if character.stepwise_mod:
+            if self.stepwise_buttons:
+                for but in self.stepwise_buttons:
+                    but.render(screen)
             if self.path:
                 for tile in self.path:
                     screen.blit(Render_functions.load_image('Tile-Button-down.png', alpha_cannel="True"), (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
@@ -85,11 +105,12 @@ mainloop = True                                     # Двигатель гла�
 world_img = pygame.Surface((RES_X, RES_Y))
 render_coof = [0, 0]
 ch = False
+npc_list = [NPC("Test_Enemy", (1, 4))]
 character = Character("Test Character", (0, 0))
-interface = Interface(character, (RES_X, RES_Y))
-interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), character.change_mod))
-interface.stepwise_buttons.append(Buttons.Button("Конец хода", (0, RES_Y-20), character.change_mod))
-
+interface = Interface(character, npc_list, (RES_X, RES_Y))
+interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), interface.change_mod))
+interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), interface.new_step))
+# npc_list[0].set_path(findPath(map_f, map_w, npc_list[0].cor, character.cor))
 
 objects = {
         # Все доступные объекты
@@ -101,8 +122,6 @@ objects = {
         1: Tile.Wall((0, 0), "Wall_1.png", 1)
     }
 }
-
-npc_list = [NPC("Test_Enemy",(1,4))]
 
 while mainloop:
     screen.fill((0, 0, 0))
@@ -130,7 +149,7 @@ while mainloop:
 
         character.update(clock.get_time())
         for npc in npc_list:
-            npc.update(clock.get_time())
+            npc.update(clock.get_time(), character.cor, map_f, map_w)
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
         character.render(world_img)
         for npc in npc_list:

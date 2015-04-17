@@ -1,5 +1,6 @@
 import pygame
 import Render_functions
+from coefficients import *
 
 
 class Men():
@@ -21,7 +22,7 @@ class Men():
                 "shooting"  :1                                                         # Стрельба
                     }
         self.coofs = {
-            'stepwise_move': 2
+            'stepwise_move': STEPWISE_MOVE
         }
         self.healf = 100                        # Очки здоровья
         self.manna = self.skills["magic"]*10    # Очки манны
