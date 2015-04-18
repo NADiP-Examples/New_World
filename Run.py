@@ -28,7 +28,13 @@ class Interface():
                     self.z_ind = False
         if e.type == pygame.MOUSEBUTTONUP:
             if e.button == 1 and not self.z_ind:
-                character.set_path(findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f))))
+                chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, map_f)
+                for npc in npc_list:
+                    if chosen_tile == npc.cor:
+                        character.hit(npc)
+                        print("NPC HEALTH HERE!!! - ", npc.healf)
+                    else:
+                        character.set_path(findPath(map_f, map_w, character.cor, chosen_tile))
         if character.stepwise_mod:
             for but in self.stepwise_buttons:
                 if but.events(e):
@@ -149,14 +155,17 @@ while mainloop:
 
         character.update(clock.get_time())
         for npc in npc_list:
-            npc.update(clock.get_time(), character.cor, map_f, map_w)
+            if npc.update(clock.get_time(), character, map_f, map_w):
+                character.stepwise_mod = True
+                for npc in npc_list:
+                    npc.stepwise_mod = True
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
         character.render(world_img)
         for npc in npc_list:
             npc.render(world_img)
         screen.blit(world_img, render_coof)
         interface.render(screen, render_coof)
-
+    print(character.healf)
     pygame.display.set_caption("FPS: " + str(clock.get_fps()))
     clock.tick(FPS)         # Управление ФПС
     pygame.display.flip()   # Обновляем дисплей
