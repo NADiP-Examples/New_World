@@ -7,17 +7,84 @@ import Extra_functions
 import Render_functions
 import pickle
 import Buttons
+import Spell
+
+
+class GameProcess():
+    def __init__(self, npc, character):
+        self.turn = -1
+        self.character = character
+        self.npc = npc
+
+    def update(self, dt):
+        if character.stepwise_mod:
+            if self.turn == -1:
+                self.character.update(dt)
+            else:
+                try:
+                    self.npc[self.turn].update(dt, self.character, map_f, map_w)
+                    print(self.turn, "   ", self.npc[self.turn].finish, "    ", self.npc[self.turn].alarm)
+                    if self.npc[self.turn].finish:
+                        self.turn += 1
+                except:
+                    if self.npc[self.turn-1].finish:
+                        self.turn = -1
+        else:
+            self.character.update(dt)
+            for npc in self.npc:
+                if npc.update(dt, self.character, map_f, map_w):
+                    self.on_stepwise_mod()
+
+    def on_stepwise_mod(self):
+        self.turn = -1
+        self.character.stepwise_mod = True
+        try:
+            for npc in self.npc:
+                npc.stepwise_mod = True
+        except:
+            self.npc.stepwise_mod = True
+
+    def change_mod(self):
+        self.turn = -1
+        self.character.change_mod()
+        try:
+            for npc in self.npc:
+                npc.change_mod()
+        except:
+            self.npc.change_mod()
+
+    def new_step(self):
+        self.turn = 0
+        self.character.action_points = 15
+        try:
+            for npc in self.npc:
+                npc.action_points = 15
+                npc.finish = False
+        except:
+            self.npc.action_points = 15
+            self.npc.finish = False
 
 
 class Interface():
     def __init__(self, char, npc, res):
-        self.buttons = []
-        self.stepwise_buttons = []
         self.character = char
         self.npc_list = npc
         self.z_ind = False
         self.resolution = res
         self.path = None
+        self.pathmarker = Render_functions.load_image('Tile-Button-down.png', alpha_cannel="True")
+        self.ap = Render_functions.load_image('ActP_active.png', alpha_cannel="True")
+        self.wasted_ap = Render_functions.load_image('ActP_wasted.png', alpha_cannel="True")
+        self.buttons = []
+        self.stepwise_buttons = []
+        x = RES_X-150
+        y = 100
+        if type(self.character.spells) == list:
+            for spell in self.character.spells:
+                self.stepwise_buttons.append(Buttons.Button_Flag(Render_functions.load_text(spell.name), self.character.set_wearpon, (x, y), arg=(spell, None)))
+                y += 10
+        else:
+            self.stepwise_buttons.append(Buttons.Button_Flag(Render_functions.load_text(self.character.spells.name), character.set_wearpon, (x, y), arg=(self.character.spells, None)))
 
     def events(self, e):
         if self.buttons:
@@ -26,56 +93,62 @@ class Interface():
                     self.z_ind = True
                 else:
                     self.z_ind = False
-        if e.type == pygame.MOUSEBUTTONUP:
-            if e.button == 1 and not self.z_ind:
-                chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, map_f)
-                for npc in npc_list:
-                    if chosen_tile == npc.cor:
-                        character.hit(npc)
-                        print("NPC HEALTH HERE!!! - ", npc.healf)
-                    else:
-                        character.set_path(findPath(map_f, map_w, character.cor, chosen_tile))
-        if character.stepwise_mod:
+        if self.character.stepwise_mod:
             for but in self.stepwise_buttons:
                 if but.events(e):
                     self.z_ind = True
-                else:
+                elif self.z_ind != True:
                     self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
-                self.path = findPath(map_f, map_w, character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f)))
+                self.path = findPath(map_f, map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f)))
                 if self.path == -1:
                     self.path = None
-
-    def new_step(self):
-        character.action_points = 15
-        if self.npc_list:
-            for npc in self.npc_list:
-                npc.action_points = 15
-
-    def change_mod(self):
-        character.change_mod()
-        for npc in self.npc_list:
-            npc.change_mod()
+        if e.type == pygame.MOUSEBUTTONUP:
+            if e.button == 1 and not self.z_ind:
+                chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, map_f)
+                t = True
+                for npc in npc_list:
+                    if chosen_tile == npc.cor:
+                        self.character.set_target(npc)
+                        t = False
+                        break
+                if t:
+                    self.character.set_path(findPath(map_f, map_w, self.character.cor, chosen_tile))
 
     def render(self, screen, coof):
+        screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)), (RES_X-100,5))
         if self.buttons:
             for but in self.buttons:
                     but.render(screen)
         x = self.resolution[0] - 330
         y = self.resolution[1] - 25
         for i in range(15):
-            if i < character.action_points:
-                screen.blit(Render_functions.load_image('ActP_active.png', alpha_cannel="True"), (x, y))
+            if i < self.character.action_points:
+                screen.blit(self.ap, (x, y))
             else:
-                screen.blit(Render_functions.load_image('ActP_wasted.png', alpha_cannel="True"), (x, y))
+                screen.blit(self.wasted_ap, (x, y))
             x += 22
-        if character.stepwise_mod:
+        x = self.resolution[0] - 375
+        y = self.resolution[1] - 45
+        w = self.character.gear["Wearpon"]
+        if w:
+            if type(w) == Spell.Spell:
+                if w.type == "Attacking":
+                    screen.blit(Render_functions.load_image('Fireball.png', alpha_cannel="True"), (x, y))
+        else:
+            screen.blit(Render_functions.load_image('Fist.png', alpha_cannel="True"), (x, y))
+        if self.character.stepwise_mod:
             if self.stepwise_buttons:
                 for but in self.stepwise_buttons:
                     but.render(screen)
             if self.path:
                 for tile in self.path:
-                    screen.blit(Render_functions.load_image('Tile-Button-down.png', alpha_cannel="True"), (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
+                    screen.blit(self.pathmarker, (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
+            for npc in self.npc_list:
+                if npc.aggression:
+                    screen.blit(Render_functions.load_text(str(npc.healf),color=(200,0,0)), (coof[0]+npc.cor[0]*100+10, coof[1]+npc.cor[1]*100+10))
+            if self.character.dead:
+                screen.blit(Render_functions.load_text("Вы мертвы", pt=200, color=(220,0,0)), (80,RES_Y/2-100))
 
 
 
@@ -111,12 +184,13 @@ mainloop = True                                     # Двигатель гла�
 world_img = pygame.Surface((RES_X, RES_Y))
 render_coof = [0, 0]
 ch = False
-npc_list = [NPC("Test_Enemy", (1, 4))]
-character = Character("Test Character", (0, 0))
+npc_list = [NPC("Test_Enemy", (1, 4)), NPC("Test_Enemy_2", (4, 2))] # , NPC("Test_Enemy_2", (4, 2))
+character = Character("Test Character", (0, 0), skills=(1,3,1), spelllist=(Spell.fireball))
+game_process = GameProcess(npc_list,character)
 interface = Interface(character, npc_list, (RES_X, RES_Y))
-interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), interface.change_mod))
-interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), interface.new_step))
-# npc_list[0].set_path(findPath(map_f, map_w, npc_list[0].cor, character.cor))
+interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), game_process.change_mod))
+interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), game_process.new_step))
+
 
 objects = {
         # Все доступные объекты
@@ -150,22 +224,14 @@ while mainloop:
                 if ch:
                     render_coof[0] += e.rel[0]
                     render_coof[1] += e.rel[1]
-            elif e.type == pygame.KEYDOWN or e.type == pygame.KEYUP:
-                pass
 
-        character.update(clock.get_time())
-        for npc in npc_list:
-            if npc.update(clock.get_time(), character, map_f, map_w):
-                character.stepwise_mod = True
-                for npc in npc_list:
-                    npc.stepwise_mod = True
+        game_process.update(clock.get_time())
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
         character.render(world_img)
         for npc in npc_list:
             npc.render(world_img)
         screen.blit(world_img, render_coof)
         interface.render(screen, render_coof)
-    print(character.healf)
     pygame.display.set_caption("FPS: " + str(clock.get_fps()))
     clock.tick(FPS)         # Управление ФПС
     pygame.display.flip()   # Обновляем дисплей

@@ -2,10 +2,12 @@ import pygame
 import Render_functions
 from coefficients import *
 import random
+import Spell
+import math
 
 
 class Men():
-    def __init__(self, name, cor, attack=1):
+    def __init__(self, name, cor, attack=1, skills=(1,1,1), spelllist = ()):
     # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
@@ -19,19 +21,22 @@ class Men():
                 "Wearpon"  : None                                                                       # Оружие
         }
         self.skills = {                         # Навыки
-                "magic"     :1,                                                             # Магия
-                "strength"  :1,                                                             # Сила
-                "shooting"  :1                                                              # Стрельба
+                "magic"     :skills[0],                                                     # Магия
+                "strength"  :skills[1],                                                     # Сила
+                "shooting"  :skills[2]                                                      # Стрельба
         }
+        self.spells = spelllist                         # Заклинания
+        self.max_healf = self.skills["strength"]*10
+        self.healf = self.skills["strength"]*10         # Очки здоровья
+        self.manna = self.skills["magic"]*10            # Очки манны
+        self.action_points = 15                         # Очки действий
+        self.dead = False                               # Мертв ли персонаж
+
+    # Технические заморочки
         self.coofs = {                          # Коэффициенты (стоимость движения)
             "stepwise_move": STEPWISE_MOVE,                                                 # Движение на клетку
             "stepwise_hand_to_hand": STEPWISE_HAND_TO_HAND                                  # Удар в рукопашную
         }
-        self.healf = 10                         # Очки здоровья
-        self.manna = self.skills["magic"]*10    # Очки манны
-        self.action_points = 15                 # Очки действий
-
-    # Технические заморочки
         self.path = ()                          # Путь, по которому идет персонаж
         self.rotate = 0                         # Угол, на который повернут персонаж
         self.move_progress = [0, 0]             # Помогает отобразить процесс перехода с одной клетки на другую
@@ -42,70 +47,67 @@ class Men():
         self.last_stop = None                   # Место, где персонажа в последний раз остановили методом stop
         self.attack_distance = attack           # Дальность, на которой можно атаковать (1 клетка по умолчанию)
         self.attackfield_update()               # Область атаки в виде Rect'а
+        self.target = None
 
     def update(self, dt):
-        self.worktime += dt
-        if not self.stepwise_mod:
-            if self.action_points < 15:
-                self.action_points += 1
-        if self.worktime >= self.anim_speed:
-            self.worktime -= self.anim_speed
-            if self.path:
-                if self.stepwise_mod:
-                    if self.path[0] != self.cor:
-                        if self.action_points - self.coofs['stepwise_move'] < 0:
-                            self.stop()
+        if not self.dead:
+            self.worktime += dt
+            if not self.stepwise_mod:
+                if self.action_points < 15:
+                    self.action_points += 1
+            if self.worktime >= self.anim_speed:
+                self.worktime -= self.anim_speed
+                if self.path:
+                    if self.stepwise_mod:
+                        if self.path[0] != self.cor:
+                            if self.action_points - self.coofs['stepwise_move'] < 0:
+                                self.stop()
+                            else:
+                                if type(self.path[0]) == int:
+                                    self.move(self.path)
+                                else:
+                                    self.move(self.path[0])
                         else:
+                            self.path = self.path[1:]
+                            self.use_action_points(self.coofs['stepwise_move'])
+                    else:
+                        if self.path[0] != self.cor:
                             if type(self.path[0]) == int:
                                 self.move(self.path)
                             else:
                                 self.move(self.path[0])
-                    else:
-                        self.path = self.path[1:]
-                        self.use_action_points(self.coofs['stepwise_move'])
-                else:
-                    if self.path[0] != self.cor:
-                        if type(self.path[0]) == int:
-                            self.move(self.path)
                         else:
-                            self.move(self.path[0])
-                    else:
-                        self.path = self.path[1:]
+                            self.path = self.path[1:]
+                elif self.target:
+                    self.attackfield_update()
+                    self.hit()
 
-        self.ren_img = self.img_designer()
+            self.ren_img = self.img_designer()
 
     def move(self, new_cor):
         """
                 Двигает персонажа с тайла на тайл и отображает процесс
         """
         if new_cor[0] > self.cor[0]:        # Вправо
-            if self.rotate != 270:
-                self.img_rotate(270)
-            else:
+            if self.look_direction(new_cor):
                 self.move_progress[0] += self.speed
                 if self.move_progress[0] >= 100:
                     self.move_progress[0] = 0
                     self.cor = new_cor
         elif new_cor[0] < self.cor[0]:        # Влево
-            if self.rotate != 90:
-                self.img_rotate(90)
-            else:
+            if self.look_direction(new_cor):
                 self.move_progress[0] -= self.speed
                 if self.move_progress[0] <= -100:
                     self.move_progress[0] = 0
                     self.cor = new_cor
         elif new_cor[1] > self.cor[1]:        # Вниз
-            if self.rotate != 180:
-                self.img_rotate(180)
-            else:
+            if self.look_direction(new_cor):
                 self.move_progress[1] += self.speed
                 if self.move_progress[1] >= 100:
                     self.move_progress[1] = 0
                     self.cor = new_cor
         elif new_cor[1] < self.cor[1]:        # Вверх
-            if self.rotate != 0:
-                self.img_rotate(0)
-            else:
+            if self.look_direction(new_cor):
                 self.move_progress[1] -= self.speed
                 if self.move_progress[1] <= -100:
                     self.move_progress[1] = 0
@@ -135,18 +137,38 @@ class Men():
         else:
             return False
 
-    def hit(self, target):
-        if self.gear["Wearpon"]:
-            pass
+    def hit(self):
+        if not self.dead:
+            if self.attack_field.collidepoint(self.target.cor[0], self.target.cor[1]):
+                if self.look_direction(self.target.cor):
+                    if self.gear["Wearpon"]:
+                        if type(self.gear["Wearpon"]) == Spell.Spell:
+                            if self.use_action_points(self.gear["Wearpon"].action_points):
+                                self.gear["Wearpon"].apply(self.target)
+                    else:
+                        damage = self.skills["strength"]
+                        cost = self.coofs["stepwise_hand_to_hand"]
+                        if self.use_action_points(cost):
+                            self.target.hurt(damage)
+                    self.target = None
+
+    def set_wearpon(self, w):
+        self.gear["Wearpon"] = w
+        if w:
+            self.attack_distance = w.distance
         else:
-            damage = self.skills["strength"]
-            cost = self.coofs["stepwise_hand_to_hand"]
-        if self.use_action_points(cost):
-            target.hurt(damage)
+            self.attack_distance = 1
+        self.attackfield_update()
+
+    def set_target(self, target):
+        self.target = target
 
     def hurt(self, damage):
         if random.randint(1, 100) > 10:
             self.healf -= damage
+        if self.healf <=0:
+            self.healf = 0
+            self.dead = True
 
     def attackfield_update(self):
         self.attack_field = pygame.Rect(self.cor[0]-self.attack_distance, self.cor[1]-self.attack_distance, self.attack_distance*2+1, self.attack_distance*2+1)
@@ -163,19 +185,41 @@ class Men():
                 self.path = path
                 print(self.path)
 
+    def look_direction(self, cor):
+        x1 = cor[0]-self.cor[0]
+        y1 = cor[1]-self.cor[1]
+        x2 = 0
+        y2 = -1
+        a = int(math.acos((x1*x2+y1*y2)/(math.sqrt(x1**2+y1**2)*math.sqrt(x2**2+y2**2)))*180/3.14)
+        if cor[0]-self.cor[0] > 0:
+            a = -a +360
+        print(a)
+        if self.rotate != a:
+            self.img_rotate(a)
+        else:
+            return True
+
+
     def img_rotate(self, value, angle=10):
         """
                 Поворачивает картинку в сторону значения угла value на angle градусов. 0 градусов - вверх
         """
+        a = value
         value -= self.rotate
         if value >= 360:
             value -= 360
         elif value < 0:
             value += 360
         if value <= 180:
-            self.rotate += angle
+            if value < 10:
+                self.rotate = a
+            else:
+                self.rotate += angle
         else:
-            self.rotate -= angle
+            if value < 10:
+                self.rotate = a
+            else:
+                self.rotate -= angle
         if self.rotate >= 360:
             self.rotate -= 360
         elif self.rotate < 0:

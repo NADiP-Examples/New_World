@@ -4,7 +4,7 @@ import Render_functions
 
 pygame.init() # Из-за какого-то космического недоразумения, которое и породило pygame, без этой строки класс не может при инициализации прочесть звук.
 class Button:
-    def __init__(self, text, cor, action, arg=False, sin=False, st=pygame.mixer.Sound('Sounds/2.ogg'), color=(255, 152, 0), pt=27): # Текст кнопки, координаты, функция, звук при наведении, звук при переходе
+    def __init__(self, text, cor, action, arg=False, sin=False, st=None, color=(255, 152, 0), pt=27): # Текст кнопки, координаты, функция, звук при наведении, звук при переходе
         self.out = Render_functions.load_text(text,pt=pt)
         self.into = Render_functions.load_text(text,pt=pt,color=color)
         self.rect = Render_functions.load_text(text,pt=pt).get_rect()
@@ -51,17 +51,17 @@ class Button_Flag():
         self.rect = self.img.get_rect()
         self.rect.move_ip(pos)
         self.cor = pos
-        self.sub_imgs = (Render_functions.load_image("Tile-Button-in.png", alpha_cannel="True"),Render_functions.load_image("Tile-Button-down.png", alpha_cannel="True"))
+        # self.sub_imgs = (Render_functions.load_image("Tile-Button-in.png", alpha_cannel="True"),Render_functions.load_image("Tile-Button-down.png", alpha_cannel="True"))
         self.s_in = sin
         self.s_tar = st
         self.action = action
         self.arguments = arg        # Кортеж из двух значений, первое - аргументы, передаваемые при нажатии кнопки, вторые - при отжатии
         self.mod = "out"
         self.stat = False           # Показывает, нажата кнопка или нет
-        try:
-            self.render_img = pygame.Surface((size))
-        except:
-            self.render_img = pygame.Surface((100,100))
+        # try:
+        #     self.render_img = pygame.Surface((size))
+        # except:
+        #     self.render_img = pygame.Surface((100,100))
 
     def events(self, e): # Действие, список в который кнопка кидает изменения, доп. цель с возвращением значения.
         if self.rect.collidepoint(e.pos):
@@ -81,17 +81,17 @@ class Button_Flag():
             self.mod = "out"
 
     def render(self, screen):
-        self.render_img.blit(self.img, (0,0))
-        if self.mod == "in":
-            self.render_img.blit(self.sub_imgs[0], (0,0))
-        if self.stat:
-            self.render_img.blit(self.sub_imgs[1], (0,0))
-        screen.blit(self.render_img, self.cor)
+        screen.blit(self.img, self.cor)
+        # if self.mod == "in":
+        #     self.render_img.blit(self.sub_imgs[0], (0,0))
+        # if self.stat:
+        #     self.render_img.blit(self.sub_imgs[1], (0,0))
+        # screen.blit(self.render_img, self.cor)
 
 
 
 class Button_Img():
-    def __init__(self, imgs, cor, action, arg = False, sin= False, st=pygame.mixer.Sound('Sounds/2.ogg')): # Картинки кнопки, координаты, функция, звук при наведении, звук при переходе
+    def __init__(self, imgs, cor, action, arg = False, sin= False, st=None): # Картинки кнопки, координаты, функция, звук при наведении, звук при переходе pygame.mixer.Sound('Sounds/2.ogg')
         self.imgs = []
         if type(imgs[1]) != pygame.Surface:
             print("1")
