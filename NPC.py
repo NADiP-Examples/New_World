@@ -18,13 +18,12 @@ class NPC(Men):
         if not self.dead:
             self.visionfield_update()
             self.attackfield_update()
-            if self.AI(char, map_f, map_w):
-                super().update(dt)
-                return True
-            else:
-                super().update(dt)
+            self.AI(char, map_f, map_w)
+            super().update(dt)
         else:
             self.finish = True
+            self.alarm = False
+            self.search = False
 
     def AI(self, char, map_f, map_w):
         """
@@ -46,9 +45,9 @@ class NPC(Men):
                     self.search_point = self.path[-1]
         if self.aggression:
             if self.attack_field.collidepoint(char.cor[0], char.cor[1]):
+                self.path = None
                 if self.alarm:
                     self.set_target(char)
-                return True
             else:
                 if self.vision_field.collidepoint(char.cor[0], char.cor[1]):
                     self.alarm = True
@@ -56,12 +55,11 @@ class NPC(Men):
                         self.set_path(findPath(map_f, map_w, self.cor, char.cor))
                         if self.path != -1:
                             self.path = self.path[:-1]
-                        return True
                 else:
                     self.alarm = False
         else:
             self.finish = True
-        if not self.alarm:
+        if not self.alarm and not self.search:
             self.finish = True
 
     def hurt(self, damage):

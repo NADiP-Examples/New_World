@@ -7,14 +7,14 @@ import math
 
 
 class Men():
-    def __init__(self, name, cor, attack=1, skills=(1,1,1), spelllist = ()):
+    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png")):
     # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
         self.speed = 5                          # Скорость передвижения
         self.body = {                           # Изображения частей тела персонажей по умолчанию
-                "head": Render_functions.load_image("Head_1.png", alpha_cannel="True"),                 # Голова
-                "body": Render_functions.load_image("Body_1.png", alpha_cannel="True")                  # Тело
+                "head": Render_functions.load_image(body[0], alpha_cannel="True"),                 # Голова
+                "body": Render_functions.load_image(body[1], alpha_cannel="True")                  # Тело
         }
         self.gear = {                           # Снаряжение
                 "Outerwear": Render_functions.load_image("White_doc_robe.png", alpha_cannel="True"),    # Куртка\Костюм
@@ -26,9 +26,10 @@ class Men():
                 "shooting"  :skills[2]                                                      # Стрельба
         }
         self.spells = spelllist                         # Заклинания
-        self.max_healf = self.skills["strength"]*10
-        self.healf = self.skills["strength"]*10         # Очки здоровья
-        self.manna = self.skills["magic"]*10            # Очки манны
+        self.max_healf = self.skills["strength"]*10     # Максимальные очки здоровья
+        self.healf = self.skills["strength"]*10         # Текущие очки здоровья
+        self.max_manna = self.skills["magic"]*10        # Максимальные очки манны
+        self.manna = self.skills["magic"]*10            # Текущие очки манны
         self.action_points = 15                         # Очки действий
         self.dead = False                               # Мертв ли персонаж
 
@@ -47,7 +48,7 @@ class Men():
         self.last_stop = None                   # Место, где персонажа в последний раз остановили методом stop
         self.attack_distance = attack           # Дальность, на которой можно атаковать (1 клетка по умолчанию)
         self.attackfield_update()               # Область атаки в виде Rect'а
-        self.target = None
+        self.target = None                      # Цель атаки
 
     def update(self, dt):
         if not self.dead:
@@ -138,21 +139,26 @@ class Men():
             return False
 
     def hit(self):
-        if not self.dead:
-            if self.attack_field.collidepoint(self.target.cor[0], self.target.cor[1]):
-                if self.look_direction(self.target.cor):
-                    if self.gear["Wearpon"]:
-                        if type(self.gear["Wearpon"]) == Spell.Spell:
-                            if self.use_action_points(self.gear["Wearpon"].action_points):
-                                self.gear["Wearpon"].apply(self.target)
-                    else:
-                        damage = self.skills["strength"]
-                        cost = self.coofs["stepwise_hand_to_hand"]
-                        if self.use_action_points(cost):
-                            self.target.hurt(damage)
-                    self.target = None
+        """
+                Поворачивает персонажа в сторону цели и бьёт её
+        """
+        if self.attack_field.collidepoint(self.target.cor[0], self.target.cor[1]):
+            if self.look_direction(self.target.cor):
+                if self.gear["Wearpon"]:
+                    if type(self.gear["Wearpon"]) == Spell.Spell:
+                        if self.use_action_points(self.gear["Wearpon"].action_points):
+                            self.gear["Wearpon"].apply(self.target)
+                else:
+                    damage = self.skills["strength"]
+                    cost = self.coofs["stepwise_hand_to_hand"]
+                    if self.use_action_points(cost):
+                        self.target.hurt(damage)
+                self.target = None
 
     def set_wearpon(self, w):
+        """
+                Смена оружия на новое (или приготовить кулаки, если его нет)
+        """
         self.gear["Wearpon"] = w
         if w:
             self.attack_distance = w.distance
@@ -164,13 +170,19 @@ class Men():
         self.target = target
 
     def hurt(self, damage):
+        """
+                Получение урона
+        """
         if random.randint(1, 100) > 10:
             self.healf -= damage
-        if self.healf <=0:
+        if self.healf <= 0:
             self.healf = 0
             self.dead = True
 
     def attackfield_update(self):
+        """
+                Обновляет область, по которой персонаж может бить
+        """
         self.attack_field = pygame.Rect(self.cor[0]-self.attack_distance, self.cor[1]-self.attack_distance, self.attack_distance*2+1, self.attack_distance*2+1)
 
     def set_path(self, path):
@@ -186,14 +198,16 @@ class Men():
                 print(self.path)
 
     def look_direction(self, cor):
+        """
+                Рассчитывает угол поворота персонажа, чтобы он смотрел на определенный тайл
+        """
         x1 = cor[0]-self.cor[0]
         y1 = cor[1]-self.cor[1]
         x2 = 0
         y2 = -1
         a = int(math.acos((x1*x2+y1*y2)/(math.sqrt(x1**2+y1**2)*math.sqrt(x2**2+y2**2)))*180/3.14)
         if cor[0]-self.cor[0] > 0:
-            a = -a +360
-        print(a)
+            a = -a + 360
         if self.rotate != a:
             self.img_rotate(a)
         else:

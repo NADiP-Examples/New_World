@@ -14,7 +14,7 @@ class GameProcess():
     def __init__(self, npc, character):
         self.turn = -1
         self.character = character
-        self.npc = npc
+        self.all_npc = npc
 
     def update(self, dt):
         if character.stepwise_mod:
@@ -22,47 +22,48 @@ class GameProcess():
                 self.character.update(dt)
             else:
                 try:
-                    self.npc[self.turn].update(dt, self.character, map_f, map_w)
-                    print(self.turn, "   ", self.npc[self.turn].finish, "    ", self.npc[self.turn].alarm)
-                    if self.npc[self.turn].finish:
+                    self.all_npc[self.turn].update(dt, self.character, map_f, map_w)
+                    print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "    ", self.all_npc[self.turn].alarm)
+                    if self.all_npc[self.turn].finish:
                         self.turn += 1
                 except:
-                    if self.npc[self.turn-1].finish:
+                    if self.all_npc[self.turn-1].finish:
                         self.turn = -1
         else:
             self.character.update(dt)
-            for npc in self.npc:
-                if npc.update(dt, self.character, map_f, map_w):
+            for npc in self.all_npc:
+                npc.update(dt, self.character, map_f, map_w)
+                if npc.alarm:
                     self.on_stepwise_mod()
 
     def on_stepwise_mod(self):
         self.turn = -1
         self.character.stepwise_mod = True
         try:
-            for npc in self.npc:
+            for npc in self.all_npc:
                 npc.stepwise_mod = True
         except:
-            self.npc.stepwise_mod = True
+            self.all_npc.stepwise_mod = True
 
     def change_mod(self):
         self.turn = -1
         self.character.change_mod()
         try:
-            for npc in self.npc:
+            for npc in self.all_npc:
                 npc.change_mod()
         except:
-            self.npc.change_mod()
+            self.all_npc.change_mod()
 
     def new_step(self):
         self.turn = 0
         self.character.action_points = 15
         try:
-            for npc in self.npc:
+            for npc in self.all_npc:
                 npc.action_points = 15
                 npc.finish = False
         except:
-            self.npc.action_points = 15
-            self.npc.finish = False
+            self.all_npc.action_points = 15
+            self.all_npc.finish = False
 
 
 class Interface():
@@ -116,7 +117,8 @@ class Interface():
                     self.character.set_path(findPath(map_f, map_w, self.character.cor, chosen_tile))
 
     def render(self, screen, coof):
-        screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)), (RES_X-100,5))
+        screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)+"|"+str(self.character.max_healf)), (RES_X-110, 5))
+        screen.blit(Render_functions.load_text("Манна "+str(self.character.manna)+"|"+str(self.character.max_manna)), (RES_X-110, 25))
         if self.buttons:
             for but in self.buttons:
                     but.render(screen)
@@ -146,9 +148,9 @@ class Interface():
                     screen.blit(self.pathmarker, (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
             for npc in self.npc_list:
                 if npc.aggression:
-                    screen.blit(Render_functions.load_text(str(npc.healf),color=(200,0,0)), (coof[0]+npc.cor[0]*100+10, coof[1]+npc.cor[1]*100+10))
+                    screen.blit(Render_functions.load_text(str(npc.healf), color=(200, 0, 0)), (coof[0]+npc.cor[0]*100+10, coof[1]+npc.cor[1]*100+10))
             if self.character.dead:
-                screen.blit(Render_functions.load_text("Вы мертвы", pt=200, color=(220,0,0)), (80,RES_Y/2-100))
+                screen.blit(Render_functions.load_text("Вы мертвы", pt=200, color=(220, 0, 0)), (80, RES_Y/2-100))
 
 
 
@@ -185,8 +187,9 @@ world_img = pygame.Surface((RES_X, RES_Y))
 render_coof = [0, 0]
 ch = False
 npc_list = [NPC("Test_Enemy", (1, 4)), NPC("Test_Enemy_2", (4, 2))] # , NPC("Test_Enemy_2", (4, 2))
-character = Character("Test Character", (0, 0), skills=(1,3,1), spelllist=(Spell.fireball))
-game_process = GameProcess(npc_list,character)
+npc_list[0].attack_distance = 2
+character = Character("Test Character", (0, 0), skills=(1, 3, 1), spelllist=(Spell.fireball))
+game_process = GameProcess(npc_list, character)
 interface = Interface(character, npc_list, (RES_X, RES_Y))
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), game_process.change_mod))
 interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), game_process.new_step))
