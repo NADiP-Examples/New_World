@@ -4,8 +4,8 @@ from findPathLee import findPath
 
 
 class NPC(Men):
-    def __init__(self, name, cor, aggression=True, vision=3):
-        super().__init__(name, cor)
+    def __init__(self, name, cor, aggression=True, vision=3, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png"), gear=("White_doc_robe.png", None)):
+        super().__init__(name, cor, skills=skills, spelllist=spelllist, body=body, gear=gear)
         self.aggression = aggression
         self.search = False
         self.search_point = None
@@ -14,12 +14,12 @@ class NPC(Men):
         self.visionfield_update()
         self.finish = False
 
-    def update(self, dt, char, map_f, map_w):
+    def update(self, dt, char, map_f, map_w, all_persons):
         if not self.dead:
             self.visionfield_update()
             self.attackfield_update()
             self.AI(char, map_f, map_w)
-            super().update(dt)
+            super().update(dt, all_persons)
         else:
             self.finish = True
             self.alarm = False
@@ -59,7 +59,7 @@ class NPC(Men):
                     self.alarm = False
         else:
             self.finish = True
-        if not self.alarm and not self.search:
+        if not self.alarm and not self.search and not self.path:
             self.finish = True
 
     def hurt(self, damage):

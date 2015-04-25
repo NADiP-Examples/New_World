@@ -7,7 +7,7 @@ import math
 
 
 class Men():
-    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png")):
+    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png"), gear=("White_doc_robe.png", None)):
     # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
@@ -17,8 +17,8 @@ class Men():
                 "body": Render_functions.load_image(body[1], alpha_cannel="True")                  # Тело
         }
         self.gear = {                           # Снаряжение
-                "Outerwear": Render_functions.load_image("White_doc_robe.png", alpha_cannel="True"),    # Куртка\Костюм
-                "Wearpon"  : None                                                                       # Оружие
+                "Outerwear": Render_functions.load_image(gear[0], alpha_cannel="True"),    # Куртка\Костюм
+                "Wearpon"  : Render_functions.load_image(gear[1], alpha_cannel="True"),    # Оружие
         }
         self.skills = {                         # Навыки
                 "magic"     :skills[0],                                                     # Магия
@@ -50,7 +50,7 @@ class Men():
         self.attackfield_update()               # Область атаки в виде Rect'а
         self.target = None                      # Цель атаки
 
-    def update(self, dt):
+    def update(self, dt, all_persons):
         if not self.dead:
             self.worktime += dt
             if not self.stepwise_mod:
@@ -71,6 +71,11 @@ class Men():
                         else:
                             self.path = self.path[1:]
                             self.use_action_points(self.coofs['stepwise_move'])
+                            for per in all_persons:
+                                if self.path:
+                                    if self.path[0] == per.cor:
+                                        print("KKKKKKKKKKKKKKKKKKKKKKKKK")
+                                        self.stop()
                     else:
                         if self.path[0] != self.cor:
                             if type(self.path[0]) == int:
@@ -79,6 +84,11 @@ class Men():
                                 self.move(self.path[0])
                         else:
                             self.path = self.path[1:]
+                            for per in all_persons:
+                                if self.path:
+                                    if self.path[0] == per.cor:
+                                        print("KKKKKKKKKKKKKKKKKKKKKKKKK")
+                                        self.stop()
                 elif self.target:
                     self.attackfield_update()
                     self.hit()

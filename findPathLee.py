@@ -38,6 +38,8 @@ def findPath(Matrix, WallMatrix, Start, Finish):
                 res = []
                 counter += 1
             resPath = output(resPath, i, Matrix, WallMatrix, Start)
+            if type(resPath) != int:
+                resPath = resPath[1:]
             return resPath
         else:
             return False

@@ -12,17 +12,19 @@ import Spell
 
 class GameProcess():
     def __init__(self, npc, character):
-        self.turn = -1
-        self.character = character
-        self.all_npc = npc
+        self.turn = -1                      # Очередь хода (-1 - это наш персонаж)
+        self.character = character          # Ссылка на игрового персонажа
+        self.all_npc = npc                  # Ссылка на всех NPC
+        self.all_persons = [character]      # Все персонажи
+        self.all_persons.extend(npc)
 
     def update(self, dt):
-        if character.stepwise_mod:
+        if self.character.stepwise_mod:
             if self.turn == -1:
-                self.character.update(dt)
+                self.character.update(dt, self.all_persons)
             else:
                 try:
-                    self.all_npc[self.turn].update(dt, self.character, map_f, map_w)
+                    self.all_npc[self.turn].update(dt, self.character, map_f, map_w, self.all_persons)
                     print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "    ", self.all_npc[self.turn].alarm)
                     if self.all_npc[self.turn].finish:
                         self.turn += 1
@@ -30,13 +32,16 @@ class GameProcess():
                     if self.all_npc[self.turn-1].finish:
                         self.turn = -1
         else:
-            self.character.update(dt)
+            self.character.update(dt, self.all_persons)
             for npc in self.all_npc:
-                npc.update(dt, self.character, map_f, map_w)
+                npc.update(dt, self.character, map_f, map_w, self.all_persons)
                 if npc.alarm:
                     self.on_stepwise_mod()
 
     def on_stepwise_mod(self):
+        """
+                Включить пошаговый режим для всех
+        """
         self.turn = -1
         self.character.stepwise_mod = True
         try:
@@ -46,6 +51,9 @@ class GameProcess():
             self.all_npc.stepwise_mod = True
 
     def change_mod(self):
+        """
+                Сменить режим с пошагового на нормальный или обратно
+        """
         self.turn = -1
         self.character.change_mod()
         try:
@@ -55,6 +63,9 @@ class GameProcess():
             self.all_npc.change_mod()
 
     def new_step(self):
+        """
+                Начать новый ход (он начинается с хода противников)
+        """
         self.turn = 0
         self.character.action_points = 15
         try:
@@ -67,13 +78,16 @@ class GameProcess():
 
 
 class Interface():
-    def __init__(self, char, npc, res):
+    def __init__(self, char, npc, res, map_floor, map_wall):
         self.character = char
         self.npc_list = npc
+        self.map_f = map_floor
+        self.map_w = map_wall
+        # self.map_pass = self.map_f[:]
         self.z_ind = False
         self.resolution = res
         self.path = None
-        self.pathmarker = Render_functions.load_image('Tile-Button-down.png', alpha_cannel="True")
+        self.pathmarker = Render_functions.load_image('Pathmarker.png', alpha_cannel="True")  # Картинка выбраного пути
         self.ap = Render_functions.load_image('ActP_active.png', alpha_cannel="True")
         self.wasted_ap = Render_functions.load_image('ActP_wasted.png', alpha_cannel="True")
         self.buttons = []
@@ -101,12 +115,12 @@ class Interface():
                 elif self.z_ind != True:
                     self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
-                self.path = findPath(map_f, map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, map_f)))
+                self.path = findPath(self.map_f, self.map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, self.map_f)))
                 if self.path == -1:
                     self.path = None
         if e.type == pygame.MOUSEBUTTONUP:
             if e.button == 1 and not self.z_ind:
-                chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, map_f)
+                chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, self.map_f)
                 t = True
                 for npc in npc_list:
                     if chosen_tile == npc.cor:
@@ -114,7 +128,7 @@ class Interface():
                         t = False
                         break
                 if t:
-                    self.character.set_path(findPath(map_f, map_w, self.character.cor, chosen_tile))
+                    self.character.set_path(findPath(self.map_f, self.map_w, self.character.cor, chosen_tile))
 
     def render(self, screen, coof):
         screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)+"|"+str(self.character.max_healf)), (RES_X-110, 5))
@@ -153,51 +167,45 @@ class Interface():
                 screen.blit(Render_functions.load_text("Вы мертвы", pt=200, color=(220, 0, 0)), (80, RES_Y/2-100))
 
 
-
 def set_scene(scene_value):
     """
     Уникальная нанофункция, сменяющая сцену. Благодаря моим глубочайшим познаниям в архитектуре языка выглядит так уродливо
     """
     scene_value[0][0] = scene_value[1]
 
+
 # Globals
-FPS = 60      # ФПС программы
-RES_X = 900   # Разрешение по длине
-RES_Y = 700   # Разрешение по ширине
-TILE_SIZE = 100
-
-def npc_step(npc_list):
-    for npc in npc_list:
-        pass
+FPS = 60                                            # ФПС программы
+RES_X = 900                                         # Разрешение по длине
+RES_Y = 700                                         # Разрешение по ширине
+TILE_SIZE = 100                                     # Размер тайла (НЕ РАБОТАЕТ!!!!!)
 
 
-
-        # Main Actions
-file = open('d', 'rb')
-maps = pickle.load(file)
-map_f, map_w, map_d = maps
-file.close()
+# Main Actions
+file = open('d', 'rb')                              # Открыть файл с картами
+maps = pickle.load(file)                            # Загрузить карты
+map_f, map_w, map_d = maps                          # Загрузить карты в собственные переменные
+file.close()                                        # Закрыть файл с картами
 
 pygame.init()                                       # PyGame начинает работу
 screen = pygame.display.set_mode((RES_X, RES_Y))    # Создаем окно программы
 clock = pygame.time.Clock()                         # Создаем таймер
 menu = ["game"]                                     # Меню, которое в данный момент на экране
 mainloop = True                                     # Двигатель главного цикла
-world_img = pygame.Surface((RES_X, RES_Y))
+world_img = pygame.Surface((RES_X, RES_Y))          # Поверхность, на которой отображается весь игровой мир
 render_coof = [0, 0]
 ch = False
-npc_list = [NPC("Test_Enemy", (1, 4)), NPC("Test_Enemy_2", (4, 2))] # , NPC("Test_Enemy_2", (4, 2))
+npc_list = [NPC("Test_Enemy", (1, 4), gear=(None, None)), NPC("Test_Enemy_2", (4, 2), gear=(None, None))]
 npc_list[0].attack_distance = 2
 character = Character("Test Character", (0, 0), skills=(1, 3, 1), spelllist=(Spell.fireball))
 game_process = GameProcess(npc_list, character)
-interface = Interface(character, npc_list, (RES_X, RES_Y))
+interface = Interface(character, npc_list, (RES_X, RES_Y), map_f, map_w)
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), game_process.change_mod))
 interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), game_process.new_step))
 
 
-objects = {
-        # Все доступные объекты
-    "Floor" : {
+objects = {     # Все доступные объекты
+    "Floor": {
         1: Tile.Floor((0, 0), "B_Tile.png", 1),
         2: Tile.Floor((0, 0), "Tile-2.png", 2)
     },
