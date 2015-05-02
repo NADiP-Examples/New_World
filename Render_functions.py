@@ -8,7 +8,6 @@ def load_image(name, path="Images", alpha_cannel=""):
     try:
         fullname = os.path.join(path, name) # Указываем путь к папке с картинками
     except:
-        print("Cannot load image")
         return None
     try:
         image = pygame.image.load(fullname) # Загружаем картинку и сохраняем поверхность (Surface)

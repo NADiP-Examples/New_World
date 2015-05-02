@@ -7,24 +7,26 @@ import math
 
 
 class Men():
-    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png"), gear=("White_doc_robe.png", None)):
+    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Body_1.png", "Head_1.png"), gear=(None, None)): # "White_doc_robe.png"
     # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
         self.speed = 5                          # Скорость передвижения
         self.body = {                           # Изображения частей тела персонажей по умолчанию
-                "head": Render_functions.load_image(body[0], alpha_cannel="True"),                 # Голова
-                "body": Render_functions.load_image(body[1], alpha_cannel="True")                  # Тело
+                "head": Render_functions.load_image(body[1], alpha_cannel="True"),                  # Голова
+                "body": Render_functions.load_image(body[0], alpha_cannel="True"),                  # Тело
         }
         self.gear = {                           # Снаряжение
                 "Outerwear": Render_functions.load_image(gear[0], alpha_cannel="True"),    # Куртка\Костюм
-                "Wearpon"  : Render_functions.load_image(gear[1], alpha_cannel="True"),    # Оружие
+                "Wearpon"  : Render_functions.load_image(gear[1], alpha_cannel="True")    # Оружие
         }
         self.skills = {                         # Навыки
                 "magic"     :skills[0],                                                     # Магия
                 "strength"  :skills[1],                                                     # Сила
                 "shooting"  :skills[2]                                                      # Стрельба
         }
+        self.animations = ()
+        self.animations_update(body, gear)
         self.spells = spelllist                         # Заклинания
         self.max_healf = self.skills["strength"]*10     # Максимальные очки здоровья
         self.healf = self.skills["strength"]*10         # Текущие очки здоровья
@@ -42,13 +44,19 @@ class Men():
         self.rotate = 0                         # Угол, на который повернут персонаж
         self.move_progress = [0, 0]             # Помогает отобразить процесс перехода с одной клетки на другую
         self.anim_speed = 25                    # Скорость смены кадров в миллисекундах
+        self.anim_part = None
+        self.anim_num = None
+        self.anim_stage = 0
+        self.anim_start= False
         self.worktime = 0                       # Кол-во миллисекунд с последней смены кадра
         self.ren_img = None                     # Картинка, которая отображается на экране
+        self.ren_img = self.img_designer()
         self.stepwise_mod = False               # Включает/Выключает пошаговый режим
         self.last_stop = None                   # Место, где персонажа в последний раз остановили методом stop
         self.attack_distance = attack           # Дальность, на которой можно атаковать (1 клетка по умолчанию)
         self.attackfield_update()               # Область атаки в виде Rect'а
         self.target = None                      # Цель атаки
+        self.whizbangs = []
 
     def update(self, dt, all_persons):
         if not self.dead:
@@ -92,8 +100,9 @@ class Men():
                 elif self.target:
                     self.attackfield_update()
                     self.hit()
-
-            self.ren_img = self.img_designer()
+                self.ren_img = self.img_designer()
+                for w in self.whizbangs:
+                    w.update()
 
     def move(self, new_cor):
         """
@@ -157,12 +166,15 @@ class Men():
                 if self.gear["Wearpon"]:
                     if type(self.gear["Wearpon"]) == Spell.Spell:
                         if self.use_action_points(self.gear["Wearpon"].action_points):
-                            self.gear["Wearpon"].apply(self.target)
+                            self.gear["Wearpon"].apply(self.target, self.cor, self.whizbangs)
                 else:
                     damage = self.skills["strength"]
                     cost = self.coofs["stepwise_hand_to_hand"]
                     if self.use_action_points(cost):
                         self.target.hurt(damage)
+                        self.anim_part = 0
+                        self.anim_num = 0
+                        self.anim_start = True
                 self.target = None
 
     def set_wearpon(self, w):
@@ -223,6 +235,28 @@ class Men():
         else:
             return True
 
+    def animations_update(self, body, gear):
+        self.animations = [[[]],
+                           [[]]
+                            ]
+        if gear[0]:
+            pass
+        else:
+            self.animations[0][0] =  Render_functions.load_image(body[0][:-4]+"_a_punch1.png", alpha_cannel="True")
+
+    def play_anim(self):
+        a = self.animations[self.anim_part][self.anim_num]
+        if type(a) == list:
+            pass
+        elif self.anim_stage < 1:
+            if type(a) == list:
+                pass
+            else:
+                return a
+            self.anim_stage += 1
+        else:
+            self.anim_start = False
+            self.anim_stage = 0
 
     def img_rotate(self, value, angle=10):
         """
@@ -263,9 +297,14 @@ class Men():
         img.blit(body, (0, img.get_height()-body.get_height()))
         img.blit(head, (img.get_width()/2-head.get_width()/2, 0))
         img = pygame.transform.rotate(img, self.rotate)
+        print(self.rotate)
+        if self.anim_start:
+            self.play_anim()
         main_img = pygame.Surface((100, 100), pygame.SRCALPHA)
         main_img.blit(img, (main_img.get_width()/2-img.get_width()/2, main_img.get_height()/2-img.get_height()/2))
         return main_img
 
     def render(self, screen):
         screen.blit(self.ren_img, (self.cor[0]*100+self.move_progress[0], self.cor[1]*100+self.move_progress[1]))
+        for w in self.whizbangs:
+            w.render(screen)

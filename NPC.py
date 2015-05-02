@@ -4,7 +4,7 @@ from findPathLee import findPath
 
 
 class NPC(Men):
-    def __init__(self, name, cor, aggression=True, vision=3, skills=(1, 1, 1), spelllist = (), body=("Head_1.png", "Body_1.png"), gear=("White_doc_robe.png", None)):
+    def __init__(self, name, cor, aggression=True, vision=3, skills=(1, 1, 1), spelllist = (), body=("Body_1.png", "Head_1.png"), gear=("White_doc_robe.png", None)):
         super().__init__(name, cor, skills=skills, spelllist=spelllist, body=body, gear=gear)
         self.aggression = aggression
         self.search = False
@@ -42,7 +42,8 @@ class NPC(Men):
                         self.search_point = char.cor
                     self.aggression = True
                     self.set_path(findPath(map_f, map_w, self.cor, self.search_point)[:-1])
-                    self.search_point = self.path[-1]
+                    if type(self.path) == list:
+                        self.search_point = self.path[-1]
         if self.aggression:
             if self.attack_field.collidepoint(char.cor[0], char.cor[1]):
                 self.path = None
