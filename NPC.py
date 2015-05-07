@@ -20,6 +20,8 @@ class NPC(Men):
             self.attackfield_update()
             self.AI(char, map_f, map_w)
             super().update(dt, all_persons)
+            if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0 and not self.anim_play:
+                self.finish = True
         else:
             self.finish = True
             self.alarm = False

@@ -25,7 +25,7 @@ class GameProcess():
             else:
                 try:
                     self.all_npc[self.turn].update(dt, self.character, map_f, map_w, self.all_persons)
-                    print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "    ", self.all_npc[self.turn].alarm)
+                    print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "  Тревога -  ", self.all_npc[self.turn].alarm, "  ОД   ", self.all_npc[self.turn].action_points)
                     if self.all_npc[self.turn].finish:
                         self.turn += 1
                 except:
@@ -54,6 +54,9 @@ class GameProcess():
         """
                 Сменить режим с пошагового на нормальный или обратно
         """
+        for npc in self.all_npc:
+            if npc.alarm:
+                return
         self.turn = -1
         self.character.change_mod()
         try:

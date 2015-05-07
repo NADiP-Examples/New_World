@@ -11,7 +11,11 @@ class Spell():
             self.damage = effect[0]
             self.whizbang = effect[1]
 
-    def apply(self, target, cor, lst):
+    def apply(self, exorcist, target, cor, lst):
+        if exorcist.manna - self.manna < 0:
+            return
+        else:
+            exorcist.manna -= self.manna
         if self.type == "Attacking":
             target.hurt(self.damage)
             lst.append(Whizbang(cor, target.cor, self.whizbang))

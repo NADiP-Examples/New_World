@@ -25,7 +25,7 @@ class Men():
                 "strength"  :skills[1],                                                     # Сила
                 "shooting"  :skills[2]                                                      # Стрельба
         }
-        self.animations = ()
+        self.animations = {}
         self.animations_update(body, gear)
         self.spells = spelllist                         # Заклинания
         self.max_healf = self.skills["strength"]*10     # Максимальные очки здоровья
@@ -44,10 +44,8 @@ class Men():
         self.rotate = 0                         # Угол, на который повернут персонаж
         self.move_progress = [0, 0]             # Помогает отобразить процесс перехода с одной клетки на другую
         self.anim_speed = 25                    # Скорость смены кадров в миллисекундах
-        self.anim_part = None
-        self.anim_num = None
+        self.anim_play= False
         self.anim_stage = 0
-        self.anim_start= False
         self.worktime = 0                       # Кол-во миллисекунд с последней смены кадра
         self.ren_img = None                     # Картинка, которая отображается на экране
         self.ren_img = self.img_designer()
@@ -59,50 +57,39 @@ class Men():
         self.whizbangs = []
 
     def update(self, dt, all_persons):
-        if not self.dead:
-            self.worktime += dt
-            if not self.stepwise_mod:
-                if self.action_points < 15:
-                    self.action_points += 1
-            if self.worktime >= self.anim_speed:
-                self.worktime -= self.anim_speed
-                if self.path:
-                    if self.stepwise_mod:
-                        if self.path[0] != self.cor:
-                            if self.action_points - self.coofs['stepwise_move'] < 0:
-                                self.stop()
-                            else:
-                                if type(self.path[0]) == int:
-                                    self.move(self.path)
-                                else:
-                                    self.move(self.path[0])
-                        else:
-                            self.path = self.path[1:]
-                            self.use_action_points(self.coofs['stepwise_move'])
-                            for per in all_persons:
-                                if self.path:
-                                    if self.path[0] == per.cor:
-                                        print("KKKKKKKKKKKKKKKKKKKKKKKKK")
-                                        self.stop()
+        if self.dead:
+            return
+        self.worktime += dt
+        if not self.worktime >= self.anim_speed:
+            return
+        self.worktime -= self.anim_speed
+        if not self.stepwise_mod and self.action_points < 15:
+            self.action_points += 1
+        if self.path:
+            if self.path[0] != self.cor:
+                if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0:
+                    self.stop()
+                else:
+                    if type(self.path[0]) == int:
+                        self.move(self.path)
                     else:
-                        if self.path[0] != self.cor:
-                            if type(self.path[0]) == int:
-                                self.move(self.path)
-                            else:
-                                self.move(self.path[0])
-                        else:
-                            self.path = self.path[1:]
-                            for per in all_persons:
-                                if self.path:
-                                    if self.path[0] == per.cor:
-                                        print("KKKKKKKKKKKKKKKKKKKKKKKKK")
-                                        self.stop()
-                elif self.target:
-                    self.attackfield_update()
-                    self.hit()
-                self.ren_img = self.img_designer()
-                for w in self.whizbangs:
-                    w.update()
+                        self.move(self.path[0])
+            else:
+                self.path = self.path[1:]
+                if self.stepwise_mod:
+                    self.use_action_points(self.coofs['stepwise_move'])
+                for per in all_persons:
+                    if self.path:
+                        if self.path[0] == per.cor:
+                            self.stop()
+                        if self.path == per.cor:
+                            self.stop()
+        elif self.target:
+            self.attackfield_update()
+            self.hit()
+        self.ren_img = self.img_designer()
+        for w in self.whizbangs:
+            w.update()
 
     def move(self, new_cor):
         """
@@ -161,29 +148,31 @@ class Men():
         """
                 Поворачивает персонажа в сторону цели и бьёт её
         """
-        if self.attack_field.collidepoint(self.target.cor[0], self.target.cor[1]):
-            if self.look_direction(self.target.cor):
-                if self.gear["Wearpon"]:
-                    if type(self.gear["Wearpon"]) == Spell.Spell:
-                        if self.use_action_points(self.gear["Wearpon"].action_points):
-                            self.gear["Wearpon"].apply(self.target, self.cor, self.whizbangs)
-                else:
-                    damage = self.skills["strength"]
-                    cost = self.coofs["stepwise_hand_to_hand"]
-                    if self.use_action_points(cost):
-                        self.target.hurt(damage)
-                        self.anim_part = 0
-                        self.anim_num = 0
-                        self.anim_start = True
-                self.target = None
+        if not self.attack_field.collidepoint(self.target.cor[0], self.target.cor[1]):
+            return
+        if not self.look_direction(self.target.cor):
+            return
+        if self.anim_play == "b_punch":
+            return
+        if self.gear["Wearpon"]:
+            if type(self.gear["Wearpon"]) == Spell.Spell:
+                if self.use_action_points(self.gear["Wearpon"].action_points):
+                    self.gear["Wearpon"].apply(self, self.target, self.cor, self.whizbangs)
+        else:
+            damage = self.skills["strength"]
+            cost = self.coofs["stepwise_hand_to_hand"]
+            if self.use_action_points(cost):
+                self.target.hurt(damage)
+                self.anim_play = "b_punch"
+        self.target = None
 
-    def set_wearpon(self, w):
+    def set_wearpon(self, weapon):
         """
                 Смена оружия на новое (или приготовить кулаки, если его нет)
         """
-        self.gear["Wearpon"] = w
-        if w:
-            self.attack_distance = w.distance
+        self.gear["Wearpon"] = weapon
+        if weapon:
+            self.attack_distance = weapon.distance
         else:
             self.attack_distance = 1
         self.attackfield_update()
@@ -195,7 +184,7 @@ class Men():
         """
                 Получение урона
         """
-        if random.randint(1, 100) > 10:
+        if random.randint(1, 10) > 1:
             self.healf -= damage
         if self.healf <= 0:
             self.healf = 0
@@ -211,13 +200,14 @@ class Men():
         """
                 Устанавливает путь
         """
-        if path != -1:
-            if not self.path:
-                self.path = path
-            elif type(self.path[0]) == int:  # fixme! Жуткий ход. Поправить.
-                print(self.path)
-                self.path = path
-                print(self.path)
+        if path == -1:
+            return
+        if not self.path:
+            self.path = path
+        elif type(self.path[0]) == int:  # fixme! Жуткий ход. Поправить.
+            print(self.path)
+            self.path = path
+            print(self.path)
 
     def look_direction(self, cor):
         """
@@ -236,26 +226,25 @@ class Men():
             return True
 
     def animations_update(self, body, gear):
-        self.animations = [[[]],
-                           [[]]
-                            ]
         if gear[0]:
             pass
         else:
-            self.animations[0][0] =  Render_functions.load_image(body[0][:-4]+"_a_punch1.png", alpha_cannel="True")
+            foundation = body[0][:-4]
+        self.animations = {
+            "b_punch" : (Render_functions.load_image(foundation+"_a_punch1.png", alpha_cannel="True"),
+                       Render_functions.load_image(foundation+"_a_punch2.png", alpha_cannel="True"),
+                       Render_functions.load_image(foundation+"_a_punch3.png", alpha_cannel="True"),
+                       Render_functions.load_image(foundation+"_a_punch4.png", alpha_cannel="True"),
+                       Render_functions.load_image(foundation+"_a_punch5.png", alpha_cannel="True"))
+        }
 
-    def play_anim(self):
-        a = self.animations[self.anim_part][self.anim_num]
-        if type(a) == list:
-            pass
-        elif self.anim_stage < 1:
-            if type(a) == list:
-                pass
-            else:
-                return a
+    def get_anim_frame(self):
+        a = self.animations[self.anim_play]
+        if self.anim_stage < len(a):
             self.anim_stage += 1
+            return a[self.anim_stage-1]
         else:
-            self.anim_start = False
+            self.anim_play = False
             self.anim_stage = 0
 
     def img_rotate(self, value, angle=10):
@@ -288,18 +277,21 @@ class Men():
                 Собирает картинку из частей, поворачивает на нужный угол,
                 вклеивает на поверхность 100х100 пикселей (размер тайла)
         """
-        if self.gear["Outerwear"]:
-            body = self.gear["Outerwear"]
-        else:
-            body = self.body["body"]
+        body = None
+        head = None
+        if self.anim_play:
+            if "b" in self.anim_play:
+                body = self.get_anim_frame()
+        if not body:
+            if self.gear["Outerwear"]:
+                body = self.gear["Outerwear"]
+            else:
+                body = self.body["body"]
         head = self.body["head"]
         img = pygame.Surface((body.get_width(), int(head.get_height()/2+body.get_height())), pygame.SRCALPHA)
         img.blit(body, (0, img.get_height()-body.get_height()))
-        img.blit(head, (img.get_width()/2-head.get_width()/2, 0))
+        img.blit(head, (img.get_width()/2-head.get_width()/2, img.get_height()/2-head.get_height()/2))
         img = pygame.transform.rotate(img, self.rotate)
-        print(self.rotate)
-        if self.anim_start:
-            self.play_anim()
         main_img = pygame.Surface((100, 100), pygame.SRCALPHA)
         main_img.blit(img, (main_img.get_width()/2-img.get_width()/2, main_img.get_height()/2-img.get_height()/2))
         return main_img
