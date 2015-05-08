@@ -15,17 +15,15 @@ class NPC(Men):
         self.finish = False
 
     def update(self, dt, char, map_f, map_w, all_persons):
-        if not self.dead:
+        if self.dead:
+            self.finish = True
+        else:
             self.visionfield_update()
             self.attackfield_update()
             self.AI(char, map_f, map_w)
             super().update(dt, all_persons)
             if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0 and not self.anim_play:
                 self.finish = True
-        else:
-            self.finish = True
-            self.alarm = False
-            self.search = False
 
     def AI(self, char, map_f, map_w):
         """
@@ -60,6 +58,8 @@ class NPC(Men):
                             self.path = self.path[:-1]
                 else:
                     self.alarm = False
+                    if not self.path:
+                        self.finish = True
         else:
             self.finish = True
         if not self.alarm and not self.search and not self.path:
@@ -68,6 +68,12 @@ class NPC(Men):
     def hurt(self, damage):
         super().hurt(damage)
         self.search = True
+
+    def kill_men(self):
+        super().kill_men()
+        self.finish = True
+        self.alarm = False
+        self.search = False
 
     def use_action_points(self, cost):
         """

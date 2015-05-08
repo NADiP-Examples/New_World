@@ -25,7 +25,7 @@ class GameProcess():
             else:
                 try:
                     self.all_npc[self.turn].update(dt, self.character, map_f, map_w, self.all_persons)
-                    print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "  Тревога -  ", self.all_npc[self.turn].alarm, "  ОД   ", self.all_npc[self.turn].action_points)
+                    print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "  Тревога -  ", self.all_npc[self.turn].alarm, "  ОД   ", self.all_npc[self.turn].action_points, "   Путь   ", self.all_npc[self.turn].path)
                     if self.all_npc[self.turn].finish:
                         self.turn += 1
                 except:
@@ -86,7 +86,7 @@ class Interface():
         self.npc_list = npc
         self.map_f = map_floor
         self.map_w = map_wall
-        # self.map_pass = self.map_f[:]
+        self.map_pass = self.map_f[:]
         self.z_ind = False
         self.resolution = res
         self.path = None
@@ -118,7 +118,7 @@ class Interface():
                 elif self.z_ind != True:
                     self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
-                self.path = findPath(self.map_f, self.map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, self.map_f)))
+                self.path = findPath(self.map_f, self.map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, self.map_pass)))
                 if self.path == -1:
                     self.path = None
         if e.type == pygame.MOUSEBUTTONUP:

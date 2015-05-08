@@ -44,7 +44,7 @@ class Men():
         self.rotate = 0                         # Угол, на который повернут персонаж
         self.move_progress = [0, 0]             # Помогает отобразить процесс перехода с одной клетки на другую
         self.anim_speed = 25                    # Скорость смены кадров в миллисекундах
-        self.anim_play= False
+        self.anim_play = False
         self.anim_stage = 0
         self.worktime = 0                       # Кол-во миллисекунд с последней смены кадра
         self.ren_img = None                     # Картинка, которая отображается на экране
@@ -65,6 +65,12 @@ class Men():
         self.worktime -= self.anim_speed
         if not self.stepwise_mod and self.action_points < 15:
             self.action_points += 1
+        for per in all_persons:
+            if self.path:
+                if self.path[0] == per.cor and self != per:
+                    self.stop()
+                elif self.path == per.cor and self != per:
+                    self.stop()
         if self.path:
             if self.path[0] != self.cor:
                 if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0:
@@ -78,12 +84,6 @@ class Men():
                 self.path = self.path[1:]
                 if self.stepwise_mod:
                     self.use_action_points(self.coofs['stepwise_move'])
-                for per in all_persons:
-                    if self.path:
-                        if self.path[0] == per.cor:
-                            self.stop()
-                        if self.path == per.cor:
-                            self.stop()
         elif self.target:
             self.attackfield_update()
             self.hit()
@@ -188,7 +188,10 @@ class Men():
             self.healf -= damage
         if self.healf <= 0:
             self.healf = 0
-            self.dead = True
+            self.kill_men()
+
+    def kill_men(self):
+        self.dead = True
 
     def attackfield_update(self):
         """
