@@ -11,12 +11,13 @@ import Spell
 
 
 class GameProcess():
-    def __init__(self, npc, character):
+    def __init__(self, npc, character, phisic_wallmap):
         self.turn = -1                      # Очередь хода (-1 - это наш персонаж)
         self.character = character          # Ссылка на игрового персонажа
         self.all_npc = npc                  # Ссылка на всех NPC
         self.all_persons = [character]      # Все персонажи
         self.all_persons.extend(npc)
+        self.phisic_wallmap = phisic_wallmap
 
     def update(self, dt):
         if self.character.stepwise_mod:
@@ -24,7 +25,7 @@ class GameProcess():
                 self.character.update(dt, self.all_persons)
             else:
                 try:
-                    self.all_npc[self.turn].update(dt, self.character, map_f, map_w, self.all_persons)
+                    self.all_npc[self.turn].update(dt, self.character, map_f, map_w, self.phisic_wallmap, self.all_persons)
                     print(self.turn, "   Закончил -    ", self.all_npc[self.turn].finish, "  Тревога -  ", self.all_npc[self.turn].alarm, "  ОД   ", self.all_npc[self.turn].action_points, "   Путь   ", self.all_npc[self.turn].path)
                     if self.all_npc[self.turn].finish:
                         self.turn += 1
@@ -34,7 +35,7 @@ class GameProcess():
         else:
             self.character.update(dt, self.all_persons)
             for npc in self.all_npc:
-                npc.update(dt, self.character, map_f, map_w, self.all_persons)
+                npc.update(dt, self.character, map_f, map_w, self.phisic_wallmap, self.all_persons)
                 if npc.alarm:
                     self.on_stepwise_mod()
 
@@ -176,6 +177,28 @@ def set_scene(scene_value):
     """
     scene_value[0][0] = scene_value[1]
 
+def get_phisic_wallmap(map_wall):
+    phisic_wallmap = []
+    y = 0
+    for line in map_w:
+        x = 0
+        for tile in line:
+            z = 0
+            for dir in tile:
+                if dir == 1:
+                    if z == 0:
+                        phisic_wallmap.append(((x,y+1),(x+1,y+1)))
+                    elif z == 1:
+                        phisic_wallmap.append(((x,y),(x,y+1)))
+                    elif z == 2:
+                        phisic_wallmap.append(((x,y),(x+1,y)))
+                    elif z == 3:
+                        phisic_wallmap.append(((x+1,y),(x+1,y+1)))
+                z += 1
+            x += 1
+        y += 1
+    return phisic_wallmap
+
 
 # Globals
 FPS = 60                                            # ФПС программы
@@ -189,6 +212,7 @@ file = open('d', 'rb')                              # Открыть файл с
 maps = pickle.load(file)                            # Загрузить карты
 map_f, map_w, map_d = maps                          # Загрузить карты в собственные переменные
 file.close()                                        # Закрыть файл с картами
+phisic_wallmap = get_phisic_wallmap(map_w)
 
 pygame.init()                                       # PyGame начинает работу
 screen = pygame.display.set_mode((RES_X, RES_Y))    # Создаем окно программы
@@ -198,14 +222,15 @@ mainloop = True                                     # Двигатель гла�
 world_img = pygame.Surface((RES_X, RES_Y))          # Поверхность, на которой отображается весь игровой мир
 render_coof = [0, 0]
 ch = False
+
+
 npc_list = [NPC("Test_Enemy", (1, 4), gear=(None, None)), NPC("Test_Enemy_2", (4, 2), gear=(None, None))]
 npc_list[0].attack_distance = 2
-character = Character("Test Character", (0, 0), skills=(1, 3, 1), spelllist=(Spell.fireball))
-game_process = GameProcess(npc_list, character)
+character = Character("Test Character", (3, 0), skills=(1, 3, 1), spelllist=(Spell.fireball))
+game_process = GameProcess(npc_list, character, phisic_wallmap)
 interface = Interface(character, npc_list, (RES_X, RES_Y), map_f, map_w)
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), game_process.change_mod))
 interface.stepwise_buttons.append(Buttons.Button("Конец хода", (300, RES_Y-20), game_process.new_step))
-
 
 objects = {     # Все доступные объекты
     "Floor": {

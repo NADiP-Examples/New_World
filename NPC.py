@@ -14,18 +14,18 @@ class NPC(Men):
         self.visionfield_update()
         self.finish = False
 
-    def update(self, dt, char, map_f, map_w, all_persons):
+    def update(self, dt, char, map_f, map_w, map_w_phisic, all_persons):
         if self.dead:
             self.finish = True
         else:
             self.visionfield_update()
             self.attackfield_update()
-            self.AI(char, map_f, map_w)
+            self.AI(char, map_f, map_w, map_w_phisic)
             super().update(dt, all_persons)
             if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0 and not self.anim_play:
                 self.finish = True
 
-    def AI(self, char, map_f, map_w):
+    def AI(self, char, map_f, map_w, map_w_phisic):
         """
                 Интеллект NPC. Он уже может:
                     1.
@@ -50,7 +50,8 @@ class NPC(Men):
                 if self.alarm:
                     self.set_target(char)
             else:
-                if self.vision_field.collidepoint(char.cor[0], char.cor[1]):
+                if self.vision_field.collidepoint(char.cor[0], char.cor[1]): #and self.check_for_visibility(map_w_phisic, ((self.cor[0]+0.5,self.cor[1]+0.5),(char.cor[0]+0.5,char.cor[1]+0.5)))
+                    print("111111111111111")
                     self.alarm = True
                     if not self.path:
                         self.set_path(findPath(map_f, map_w, self.cor, char.cor))

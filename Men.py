@@ -193,6 +193,26 @@ class Men():
     def kill_men(self):
         self.dead = True
 
+
+    def check_for_visibility(self, phisic_wallmap, v_segment):
+        k1 = (v_segment[0][1]-v_segment[1][1])/(v_segment[0][0]-v_segment[1][0])
+        b1 = v_segment[0][1]-k1*v_segment[0][0]
+        for segment in phisic_wallmap:
+            try:
+                k2 = (segment[0][1]-segment[1][1])/(segment[0][0]-segment[1][0])
+            except:
+                k2 = 0
+            b2 = segment[0][1]-k2*segment[0][0]
+            if k2 != k1:
+                try:
+                    x = (b2-b1)/(k1-k2)
+                except:
+                    x = 0
+                y = k2*x+b2
+                if not (((x <= v_segment[0][0] and x >= v_segment[1][0]) or (x >= v_segment[0][0] and x <= v_segment[1][0])) and ((y <= v_segment[0][1] and y >= v_segment[1][1]) or (y >= v_segment[0][1] and y <= v_segment[1][1]))):
+                    print("222222222222")
+                    return True
+
     def attackfield_update(self):
         """
                 Обновляет область, по которой персонаж может бить
