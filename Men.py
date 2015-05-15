@@ -8,22 +8,22 @@ import math
 
 class Men():
     def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Body_1.png", "Head_1.png"), gear=(None, None)): # "White_doc_robe.png"
-    # Основные параметры персонажа
+        # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
         self.speed = 5                          # Скорость передвижения
         self.body = {                           # Изображения частей тела персонажей по умолчанию
-                "head": Render_functions.load_image(body[1], alpha_cannel="True"),                  # Голова
-                "body": Render_functions.load_image(body[0], alpha_cannel="True"),                  # Тело
+            "head": Render_functions.load_image(body[1], alpha_cannel="True"),                  # Голова
+            "body": Render_functions.load_image(body[0], alpha_cannel="True"),                  # Тело
         }
         self.gear = {                           # Снаряжение
-                "Outerwear": Render_functions.load_image(gear[0], alpha_cannel="True"),    # Куртка\Костюм
-                "Wearpon"  : Render_functions.load_image(gear[1], alpha_cannel="True")    # Оружие
+            "Outerwear": Render_functions.load_image(gear[0], alpha_cannel="True"),    # Куртка\Костюм
+            "Wearpon":   Render_functions.load_image(gear[1], alpha_cannel="True")    # Оружие
         }
         self.skills = {                         # Навыки
-                "magic"     :skills[0],                                                     # Магия
-                "strength"  :skills[1],                                                     # Сила
-                "shooting"  :skills[2]                                                      # Стрельба
+            "magic":    skills[0],                                                     # Магия
+            "strength": skills[1],                                                     # Сила
+            "shooting": skills[2]                                                      # Стрельба
         }
         self.animations = {}
         self.animations_update(body, gear)
@@ -192,7 +192,6 @@ class Men():
 
     def kill_men(self):
         self.dead = True
-
 
     def check_for_visibility(self, phisic_wallmap, v_segment):
         k1 = (v_segment[0][1]-v_segment[1][1])/(v_segment[0][0]-v_segment[1][0])
