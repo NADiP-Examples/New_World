@@ -87,7 +87,11 @@ class Interface():
         self.npc_list = npc
         self.map_f = map_floor
         self.map_w = map_wall
-        self.map_pass = self.map_f[:]
+        self.map_pass = []
+        for line in self.map_f:
+            self.map_pass.append(line.copy())
+        for n in self.npc_list:
+            self.map_pass[n.cor[1]][n.cor[0]] = 0
         self.z_ind = False
         self.resolution = res
         self.path = None
@@ -119,7 +123,7 @@ class Interface():
                 elif self.z_ind != True:
                     self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
-                self.path = findPath(self.map_f, self.map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, self.map_pass)))
+                self.path = findPath(self.map_pass, self.map_w, self.character.cor, (Extra_functions.get_click_tile(e.pos, render_coof, self.map_pass)))
                 if self.path == -1:
                     self.path = None
         if e.type == pygame.MOUSEBUTTONUP:
@@ -132,7 +136,7 @@ class Interface():
                         t = False
                         break
                 if t:
-                    self.character.set_path(findPath(self.map_f, self.map_w, self.character.cor, chosen_tile))
+                    self.character.set_path(findPath(self.map_pass, self.map_w, self.character.cor, chosen_tile))
 
     def render(self, screen, coof):
         screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)+"|"+str(self.character.max_healf)), (RES_X-110, 5))
@@ -263,12 +267,11 @@ while mainloop:
                 if ch:
                     render_coof[0] += e.rel[0]
                     render_coof[1] += e.rel[1]
-
         game_process.update(clock.get_time())
         world_img = Render_functions.scene_render(map_f, map_w, objects, world_img, TILE_SIZE)
-        character.render(world_img)
         for npc in npc_list:
             npc.render(world_img)
+        character.render(world_img)
         screen.blit(world_img, render_coof)
         interface.render(screen, render_coof)
     pygame.display.set_caption("FPS: " + str(clock.get_fps()))

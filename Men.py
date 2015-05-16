@@ -65,12 +65,13 @@ class Men():
         self.worktime -= self.anim_speed
         if not self.stepwise_mod and self.action_points < 15:
             self.action_points += 1
-        for per in all_persons:
-            if self.path:
-                if self.path[0] == per.cor and self != per:
-                    self.stop()
-                elif self.path == per.cor and self != per:
-                    self.stop()
+        if self.path:
+            for per in all_persons:
+                if not per.dead:
+                    if self.path[0] == per.cor and self != per:
+                        self.stop()
+                    elif self.path == per.cor and self != per:
+                        self.stop()
         if self.path:
             if self.path[0] != self.cor:
                 if self.stepwise_mod and self.action_points - self.coofs['stepwise_move'] < 0:
@@ -90,6 +91,8 @@ class Men():
         self.ren_img = self.img_designer()
         for w in self.whizbangs:
             w.update()
+            if w.end:
+                self.whizbangs.remove(w)
 
     def move(self, new_cor):
         """
@@ -194,23 +197,28 @@ class Men():
         self.dead = True
 
     def check_for_visibility(self, phisic_wallmap, v_segment):
-        k1 = (v_segment[0][1]-v_segment[1][1])/(v_segment[0][0]-v_segment[1][0])
+        try:
+            k1 = (v_segment[0][1]-v_segment[1][1])/(v_segment[0][0]-v_segment[1][0])
+        except:
+            k1 = 0
         b1 = v_segment[0][1]-k1*v_segment[0][0]
         for segment in phisic_wallmap:
+            print(segment)
             try:
                 k2 = (segment[0][1]-segment[1][1])/(segment[0][0]-segment[1][0])
             except:
                 k2 = 0
-            b2 = segment[0][1]-k2*segment[0][0]
             if k2 != k1:
+                b2 = segment[0][1]-k2*segment[0][0]
                 try:
                     x = (b2-b1)/(k1-k2)
                 except:
                     x = 0
                 y = k2*x+b2
-                if not (((x <= v_segment[0][0] and x >= v_segment[1][0]) or (x >= v_segment[0][0] and x <= v_segment[1][0])) and ((y <= v_segment[0][1] and y >= v_segment[1][1]) or (y >= v_segment[0][1] and y <= v_segment[1][1]))):
-                    print("222222222222")
-                    return True
+                print(x,y)
+                if y == k1*x+b1:
+                    if not (((x <= v_segment[0][0] and x >= v_segment[1][0]) or (x >= v_segment[0][0] and x <= v_segment[1][0])) and ((y <= v_segment[0][1] and y >= v_segment[1][1]) or (y >= v_segment[0][1] and y <= v_segment[1][1]))):
+                        return True
 
     def attackfield_update(self):
         """

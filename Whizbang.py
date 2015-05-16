@@ -14,7 +14,6 @@ class Whizbang:
         self.end = False
 
     def update(self):
-        print(self.end)
         self.pre_x = self.pos[0]
         self.pos[0] += self.speed[0]
         self.pos[1] += self.speed[1]
