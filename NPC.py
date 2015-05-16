@@ -51,7 +51,6 @@ class NPC(Men):
                     self.set_target(char)
             else:
                 if self.vision_field.collidepoint(char.cor[0], char.cor[1]) and self.check_for_visibility(map_w_phisic, ((self.cor[0]+0.5,self.cor[1]+0.5),(char.cor[0]+0.5,char.cor[1]+0.5))): #
-                    print("111111111111111")
                     self.alarm = True
                     if not self.path:
                         self.set_path(findPath(map_f, map_w, self.cor, char.cor))

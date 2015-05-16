@@ -85,6 +85,8 @@ class Interface():
     def __init__(self, char, npc, res, map_floor, map_wall):
         self.character = char
         self.npc_list = npc
+        self.all_persons = [character]      # Все персонажи
+        self.all_persons.extend(npc)
         self.map_f = map_floor
         self.map_w = map_wall
         self.map_pass = []
@@ -100,12 +102,12 @@ class Interface():
         self.wasted_ap = Render_functions.load_image('ActP_wasted.png', alpha_cannel="True")
         self.buttons = []
         self.stepwise_buttons = []
-        x = RES_X-150
+        x = RES_X-170
         y = 100
-        if type(self.character.spells) == list:
+        if type(self.character.spells) == tuple:
             for spell in self.character.spells:
                 self.stepwise_buttons.append(Buttons.Button_Flag(Render_functions.load_text(spell.name), self.character.set_wearpon, (x, y), arg=(spell, None)))
-                y += 10
+                y += 15
         else:
             self.stepwise_buttons.append(Buttons.Button_Flag(Render_functions.load_text(self.character.spells.name), character.set_wearpon, (x, y), arg=(self.character.spells, None)))
 
@@ -120,6 +122,7 @@ class Interface():
             for but in self.stepwise_buttons:
                 if but.events(e):
                     self.z_ind = True
+                    self.buttons_up(but, self.stepwise_buttons)
                 elif self.z_ind != True:
                     self.z_ind = False
             if e.type == pygame.MOUSEMOTION:
@@ -130,17 +133,26 @@ class Interface():
             if e.button == 1 and not self.z_ind:
                 chosen_tile = Extra_functions.get_click_tile(e.pos, render_coof, self.map_f)
                 t = True
-                for npc in npc_list:
-                    if chosen_tile == npc.cor:
-                        self.character.set_target(npc)
+                for per in self.all_persons:
+                    if chosen_tile == per.cor:
+                        self.character.set_target(per)
                         t = False
                         break
                 if t:
                     self.character.set_path(findPath(self.map_pass, self.map_w, self.character.cor, chosen_tile))
 
+    def buttons_up(self, but, lst):
+        """
+                Получает кнопку, на которую нажали и список с кнопками "отжимает" остальные кнопки
+        """
+        for button in lst:
+            if button != but and type(but) == Buttons.Button_Flag:
+                button.stat = False
+
     def render(self, screen, coof):
         screen.blit(Render_functions.load_text("Здоровье "+str(self.character.healf)+"|"+str(self.character.max_healf)), (RES_X-110, 5))
         screen.blit(Render_functions.load_text("Манна "+str(self.character.manna)+"|"+str(self.character.max_manna)), (RES_X-110, 25))
+        screen.blit(Render_functions.load_text("Броня "+str(self.character.armor)), (RES_X-110, 45))
         if self.buttons:
             for but in self.buttons:
                     but.render(screen)
@@ -170,7 +182,10 @@ class Interface():
                     screen.blit(self.pathmarker, (coof[0]+tile[0]*100, coof[1]+tile[1]*100))
             for npc in self.npc_list:
                 if npc.aggression:
-                    screen.blit(Render_functions.load_text(str(npc.healf), color=(200, 0, 0)), (coof[0]+npc.cor[0]*100+10, coof[1]+npc.cor[1]*100+10))
+                    cor = npc.get_coords_on_map()
+                    screen.blit(Render_functions.load_text(str(npc.healf), color=(200, 0, 0)), (cor[0]+5, cor[1]+5))
+                    screen.blit(Render_functions.load_text(str(npc.manna), color=(0, 0, 150)), (cor[0]+5, cor[1]+19))
+                    screen.blit(Render_functions.load_text(str(npc.manna), color=(100, 100, 100)), (cor[0]+5, cor[1]+33))
             if self.character.dead:
                 screen.blit(Render_functions.load_text("Вы мертвы", pt=200, color=(220, 0, 0)), (80, RES_Y/2-100))
 
@@ -191,13 +206,13 @@ def get_phisic_wallmap(map_wall):
             for dir in tile:
                 if dir == 1:
                     if z == 0:
-                        phisic_wallmap.append(((x,y+1),(x+1,y+1)))
+                        phisic_wallmap.append(((x, y+1), (x+1, y+1)))
                     elif z == 1:
-                        phisic_wallmap.append(((x,y),(x,y+1)))
+                        phisic_wallmap.append(((x, y), (x, y+1)))
                     elif z == 2:
-                        phisic_wallmap.append(((x,y),(x+1,y)))
+                        phisic_wallmap.append(((x, y), (x+1, y)))
                     elif z == 3:
-                        phisic_wallmap.append(((x+1,y),(x+1,y+1)))
+                        phisic_wallmap.append(((x+1, y), (x+1, y+1)))
                 z += 1
             x += 1
         y += 1
@@ -230,7 +245,7 @@ ch = False
 
 npc_list = [NPC("Test_Enemy", (1, 4), gear=(None, None)), NPC("Test_Enemy_2", (4, 2), gear=(None, None))]
 npc_list[0].attack_distance = 2
-character = Character("Test Character", (3, 0), skills=(1, 3, 1), spelllist=(Spell.fireball))
+character = Character("Test Character", (3, 0), skills=(1, 3, 1), spelllist=(Spell.fireball, Spell.improve_aah))
 game_process = GameProcess(npc_list, character, phisic_wallmap)
 interface = Interface(character, npc_list, (RES_X, RES_Y), map_f, map_w)
 interface.buttons.append(Buttons.Button("Пошагово/Реальное время", (0, RES_Y-20), game_process.change_mod))

@@ -7,7 +7,7 @@ import math
 
 
 class Men():
-    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Body_1.png", "Head_1.png"), gear=(None, None)): # "White_doc_robe.png"
+    def __init__(self, name, cor, attack=1, skills=(1, 1, 1), spelllist = (), body=("Body_1.png", "Head_1.png"), gear=(None, None)):# "White_doc_robe.png"
         # Основные параметры персонажа
         self.name = name                        # Имя
         self.cor = cor                          # Координаты
@@ -28,10 +28,13 @@ class Men():
         self.animations = {}
         self.animations_update(body, gear)
         self.spells = spelllist                         # Заклинания
+        self.effects = []                               # Эффекты, наложеные на персонажа
         self.max_healf = self.skills["strength"]*10     # Максимальные очки здоровья
         self.healf = self.skills["strength"]*10         # Текущие очки здоровья
         self.max_manna = self.skills["magic"]*10        # Максимальные очки манны
         self.manna = self.skills["magic"]*10            # Текущие очки манны
+        self.armor = 0                                  # Показатель брони
+        self.__update_armor
         self.action_points = 15                         # Очки действий
         self.dead = False                               # Мертв ли персонаж
 
@@ -55,6 +58,7 @@ class Men():
         self.attackfield_update()               # Область атаки в виде Rect'а
         self.target = None                      # Цель атаки
         self.whizbangs = []
+        self.angle = 0
 
     def update(self, dt, all_persons):
         if self.dead:
@@ -159,9 +163,15 @@ class Men():
             return
         if self.gear["Wearpon"]:
             if type(self.gear["Wearpon"]) == Spell.Spell:
+                if self.target == self and self.gear["Wearpon"].type != "Defence":
+                    self.target = None
+                    return
                 if self.use_action_points(self.gear["Wearpon"].action_points):
                     self.gear["Wearpon"].apply(self, self.target, self.cor, self.whizbangs)
         else:
+            if self.target == self:
+                self.target = None
+                return
             damage = self.skills["strength"]
             cost = self.coofs["stepwise_hand_to_hand"]
             if self.use_action_points(cost):
@@ -188,6 +198,9 @@ class Men():
                 Получение урона
         """
         if random.randint(1, 10) > 1:
+            damage -= self.armor
+            if damage < 0:
+                damage = 0
             self.healf -= damage
         if self.healf <= 0:
             self.healf = 0
@@ -196,7 +209,11 @@ class Men():
     def kill_men(self):
         self.dead = True
 
+    def __update_armor(self):
+        self.armor = 0
+
     def check_for_visibility(self, phisic_wallmap, v_segment):
+        print(v_segment)
         try:
             k1 = (v_segment[0][1]-v_segment[1][1])/(v_segment[0][0]-v_segment[1][0])
         except:
@@ -215,9 +232,10 @@ class Men():
                 except:
                     x = 0
                 y = k2*x+b2
-                print(x,y)
+                print(x, y)
                 if y == k1*x+b1:
                     if not (((x <= v_segment[0][0] and x >= v_segment[1][0]) or (x >= v_segment[0][0] and x <= v_segment[1][0])) and ((y <= v_segment[0][1] and y >= v_segment[1][1]) or (y >= v_segment[0][1] and y <= v_segment[1][1]))):
+                        print("000000000000000000000000000000000000")
                         return True
 
     def attackfield_update(self):
@@ -247,7 +265,11 @@ class Men():
         y1 = cor[1]-self.cor[1]
         x2 = 0
         y2 = -1
-        a = int(math.acos((x1*x2+y1*y2)/(math.sqrt(x1**2+y1**2)*math.sqrt(x2**2+y2**2)))*180/3.14)
+        try:
+            a = int(math.acos((x1*x2+y1*y2)/(math.sqrt(x1**2+y1**2)*math.sqrt(x2**2+y2**2)))*180/3.14)
+            self.angle = a
+        except:
+            a = self.angle
         if cor[0]-self.cor[0] > 0:
             a = -a + 360
         if self.rotate != a:
@@ -326,7 +348,10 @@ class Men():
         main_img.blit(img, (main_img.get_width()/2-img.get_width()/2, main_img.get_height()/2-img.get_height()/2))
         return main_img
 
+    def get_coords_on_map(self):
+        return self.cor[0]*100+self.move_progress[0], self.cor[1]*100+self.move_progress[1]
+
     def render(self, screen):
-        screen.blit(self.ren_img, (self.cor[0]*100+self.move_progress[0], self.cor[1]*100+self.move_progress[1]))
+        screen.blit(self.ren_img, self.get_coords_on_map())
         for w in self.whizbangs:
             w.render(screen)
